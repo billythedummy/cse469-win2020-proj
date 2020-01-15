@@ -1,3 +1,5 @@
+// Simple 2:1 Mux
+
 module simplemux #(parameter width=8) (out, in1, in2, sel);
     output reg [width-1:0] out;
     input [width-1:0] in1;

@@ -1,5 +1,5 @@
 #include <verilated.h>          // Defines common routines
-#include "Vsimplemux.h"
+#include "Vmux.h"
 
 #include "verilated_vcd_c.h"
 
@@ -8,7 +8,10 @@
 #include <cstdlib>
 #include <cstdio>
 
-Vsimplemux *uut;                     // Instantiation of module
+#define TEST_SEL_BITS 3
+#define TEST_WIDTH 8
+
+Vmux *uut;                     // Instantiation of module
 vluint64_t main_time = 0;       // Current simulation time
 
 double sc_time_stamp () {       // Called by $time in Verilog
@@ -23,7 +26,7 @@ int main(int argc, char** argv)
     VerilatedVcdC* tfp = NULL;
 
     Verilated::commandArgs(argc, argv);   // Remember args
-    uut = new Vsimplemux;   // Create instance
+    uut = new Vmux;   // Create instance
 
     uut->eval();
     uut->eval();
@@ -42,16 +45,20 @@ int main(int argc, char** argv)
     }
     
     // PUT INIT CODE HERE
-    uut->in1 = 0x0;
-    uut->in2 = 0x6;
+    const int pow = 0x01 << TEST_SEL_BITS;
+    for (int i = 0; i < pow; ++i) {
+        uut->in[i] = i % TEST_WIDTH;
+    }
     uut->sel = 0x0;
 
-    for (int i = 0; i < 4; ++i) //MAIN LOOP HERE
+    for (int i = 0; i < 2*pow+1; ++i) //gotta add +1 for the last eval, *2 just to make sure order of sel++ and eval() dont affect
     {
         /* PUT TEST CODE HERE */
-        uut->sel = !(uut->sel);
-	/* PUT TEST CODE HERE */
-        uut->eval();            // Evaluate model
+        if (i % 2 == 1) {
+            uut->sel++;
+        }
+        uut->eval();            
+	    /* PUT TEST CODE HERE */
 
         if (tfp != NULL)
         {
@@ -60,7 +67,7 @@ int main(int argc, char** argv)
  
         main_time++;            // Time passes...
     }
-
+    
     uut->final();               // Done simulating
 
     if (tfp != NULL)
