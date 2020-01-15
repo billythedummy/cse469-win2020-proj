@@ -1,2 +1,6 @@
 hardware.*
 .sconsign.dblite
+test.arm
+*.o
+._*.v
+obj_dir/
