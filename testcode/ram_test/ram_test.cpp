@@ -8,9 +8,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-#define TEST_SEL_BITS 3
-#define TEST_WIDTH 8
-
 Vram *uut;                     // Instantiation of module
 vluint64_t main_time = 0;       // Current simulation time
 
@@ -45,19 +42,27 @@ int main(int argc, char** argv)
     }
     
     // PUT INIT CODE HERE
-    const int pow = 0x01 << TEST_SEL_BITS;
-
-    for (int i = 0; i < 2*pow+1; ++i) //gotta add +1 for the last eval, *2 just to make sure order of sel++ and eval() dont affect
+    int testD = 0xDEADBEEF;
+    uut->clk = 1;
+    for (int i = 0; i < 17; ++i) //gotta add +1 for the last eval, *2 just to make sure order of sel++ and eval() dont affect
     {
         /* PUT TEST CODE HERE */
-          
+        if (i % 4 == 0) {
+            uut->we = 1;
+            uut->d = testD;
+            uut->ad = i;
+            testD++;
+        } else if (i % 4 == 2) {
+            uut->we = false;
+            uut->ad = i - 2; // Read the shit we just put in
+        }
 	    /* PUT TEST CODE HERE */
-
+        uut->eval();
+        uut->clk = !(uut->clk);
         if (tfp != NULL)
         {
             tfp->dump (main_time);
         }
- 
         main_time++;            // Time passes...
     }
     
