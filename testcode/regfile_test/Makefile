@@ -1,5 +1,5 @@
-TARGET=ram_test
-TOPMODULE=ram
+TARGET=regfile_test
+TOPMODULE=regfile
 .PHONY: $(TARGET)
 RTLSRC=../../cpu
 all: $(TARGET)
