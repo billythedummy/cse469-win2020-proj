@@ -16,6 +16,15 @@ double sc_time_stamp () {       // Called by $time in Verilog
     // what SystemC does
 }
 
+void vcdStep(Vregfile* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
+    uut->clk = !(uut->clk);
+    *main_time = *main_time + 1;
+    uut->eval();
+    if (tfp != NULL) {
+        tfp->dump (*main_time);
+    }
+}
+
 int main(int argc, char** argv)
 {
     // turn on trace or not?
@@ -43,19 +52,49 @@ int main(int argc, char** argv)
     
     // PUT INIT CODE HERE
     uut->clk = 1;
-    for (int i = 0; i < 17; ++i) //gotta add +1 for the last eval, *2 just to make sure order of sel++ and eval() dont affect
-    {
-        /* PUT TEST CODE HERE */
 
-	    /* PUT TEST CODE HERE */
-        uut->eval();
-        uut->clk = !(uut->clk);
-        if (tfp != NULL)
-        {
-            tfp->dump (main_time);
-        }
-        main_time++;            // Time passes...
-    }
+    // always sandwich between neg then pos
+    
+    // check in1 writing and reading
+    vcdStep(uut, tfp, &main_time);
+    uut->we = 1;
+    uut->wa = 6;
+    uut->wd = 0xCAFEF00D;
+    vcdStep(uut, tfp, &main_time);
+
+    // check if CAFEF00D is stored
+    vcdStep(uut, tfp, &main_time);
+    uut->in1 = uut->wa;
+    uut->in2 = 9;
+    uut->we = 0;
+    vcdStep(uut, tfp, &main_time);
+
+    // check in2 writing and reading
+    vcdStep(uut, tfp, &main_time);
+    uut->we = 1;
+    uut->wa = 9;
+    uut->wd = 0xDEADBEEF;
+    vcdStep(uut, tfp, &main_time);
+
+    // DEADBEEF should be at out2, CAFEF00D should be at out1
+    vcdStep(uut, tfp, &main_time);
+    uut->we = 0;
+    vcdStep(uut, tfp, &main_time);
+
+    // Check branching
+    vcdStep(uut, tfp, &main_time);
+    uut->ib = 1;
+    uut->bv = 16;
+    vcdStep(uut, tfp, &main_time);
+
+    vcdStep(uut, tfp, &main_time);
+    uut->ib = 0;
+    vcdStep(uut, tfp, &main_time);
+
+    vcdStep(uut, tfp, &main_time);
+    vcdStep(uut, tfp, &main_time);
+
+    vcdStep(uut, tfp, &main_time);
     
     uut->final();               // Done simulating
 
