@@ -2,15 +2,19 @@ module idec32  //instruction decoder
     (iin, cpsrin,
     alu_out, r1_out, r2_out,
     cpsrs_out, reg_we, mem_we,
+    ib, bv,
     clk);
-    // instruction in, CPSR in, ALU out, R1 out, R2 out,
+    // instruction in, CPSR in,
+    // ALU out, R1 out, R2 out, 
+    // instruction branch out, branch value out
     // should set CPSR out, register write enable, memory write enable,
     // clock
 
     input [31:0] iin;
     input [3:0] cpsrin;
     output reg [3:0] alu_out, r1_out, r2_out;
-    output reg cpsrs_out, reg_we, mem_we;
+    output reg cpsrs_out, reg_we, mem_we, ib;
+    output reg [31:0] bv;
     input clk;
 
     wire [3:0] cond_intermediate, icond;
@@ -19,7 +23,7 @@ module idec32  //instruction decoder
     assign cond_intermediate = cpsrin ~^ icond;
     assign opcode = iin[27:25];
 
-    always_ff @(posedge clk) begin
+    always @(posedge clk) begin
         // check condition, no-op (output 0) if dont match
         if ( (icond & cond_intermediate) != 0) begin
             alu_out <= 4'b0;
@@ -30,6 +34,7 @@ module idec32  //instruction decoder
             mem_we <= 0;
         end
         else if ( opcode == 3'b00X ) begin // logical/arithmetic
+            // I bit is CONTROL BIT see manual
             alu_out <= iin[24:21];
             cpsrs_out <= iin[20];
             r1_out <= iin[19:16];

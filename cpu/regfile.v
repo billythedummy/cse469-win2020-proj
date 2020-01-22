@@ -28,25 +28,25 @@ module regfile
 
     input clk;
 
-    reg [WORD*(1 << ADDR_WIDTH) - 1:0][WIDTH-1:0] mem;
+    reg [(1 << ADDR_WIDTH)*WORD*WIDTH - 1:0] mem;
     // 4 * 16 bytes
 
-    always_ff @(posedge clk) begin
+    always @(posedge clk) begin
         // r15 program counter increment
         if (ib) begin
-            mem[((1<<ADDR_WIDTH) - 1) * WORD +: WORD] <= mem[((1<<ADDR_WIDTH) - 1) * WORD +: WORD] + bv;
+            mem[((1<<ADDR_WIDTH) - 1) * WORD*WIDTH +: WORD*WIDTH] <= mem[((1<<ADDR_WIDTH) - 1) * WORD*WIDTH +: WORD*WIDTH] + bv;
         end
         else begin
-            mem[((1<<ADDR_WIDTH) - 1) * WORD +: WORD] <= mem[((1<<ADDR_WIDTH) - 1) * WORD +: WORD] + 4;
+            mem[((1<<ADDR_WIDTH) - 1) * WORD*WIDTH +: WORD*WIDTH] <= mem[((1<<ADDR_WIDTH) - 1) * WORD*WIDTH +: WORD*WIDTH] + 4;
         end
 
         // write
         if (we) begin
-            mem[ WORD*wa +: WORD ] <= wd;
+            mem[ wa*WORD*WIDTH +: WORD*WIDTH ] <= wd;
         end
         // out
-        out2 <= mem[WORD*in2 +: WORD];
-        out1 <= mem[WORD*in1 +: WORD];
-        iout <= mem[((1<<ADDR_WIDTH) - 1) * WORD +: WORD];
+        out2 <= mem[in2*WORD*WIDTH +: WORD*WIDTH];
+        out1 <= mem[in1*WORD*WIDTH +: WORD*WIDTH];
+        iout <= mem[((1<<ADDR_WIDTH) - 1) * WORD*WIDTH +: WORD*WIDTH];
     end
 endmodule

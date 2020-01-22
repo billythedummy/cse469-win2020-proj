@@ -1,5 +1,5 @@
-TARGET=idec_test
-TOPMODULE=idec
+TARGET=idec32_test
+TOPMODULE=idec32
 .PHONY: $(TARGET)
 RTLSRC=../../cpu
 all: $(TARGET)

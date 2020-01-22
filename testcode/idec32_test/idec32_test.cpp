@@ -1,5 +1,5 @@
 #include <verilated.h>          // Defines common routines
-#include "Videc.h"
+#include "Videc32.h"
 
 #include "verilated_vcd_c.h"
 
@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-Videc *uut;                     // Instantiation of module
+Videc32 *uut;                     // Instantiation of module
 vluint64_t main_time = 0;       // Current simulation time
 
 double sc_time_stamp () {       // Called by $time in Verilog
@@ -17,7 +17,7 @@ double sc_time_stamp () {       // Called by $time in Verilog
 }
 
 
-void vcdStep(Videc* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
+void vcdStep(Videc32* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
     uut->clk = !(uut->clk);
     *main_time = *main_time + 1;
     uut->eval();
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     VerilatedVcdC* tfp = NULL;
 
     Verilated::commandArgs(argc, argv);   // Remember args
-    uut = new Videc;   // Create instance
+    uut = new Videc32;   // Create instance
 
     uut->eval();
     uut->eval();

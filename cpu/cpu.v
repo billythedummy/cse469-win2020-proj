@@ -22,5 +22,18 @@ module cpu(
   assign debug_port5 = 8'h05;
   assign debug_port6 = 8'h06;
   assign debug_port7 = 8'h07;
+
+  // my shit
+  wire dummy;
+  assign dummy = 1'b0;
+
+  wire [31:0] instr_bus;
+  wire [31:0] instr_addr_bus;
+
+  wire [31:0] data_bus;
+  wire [31:0] data_addr_bus;
+
+  ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
+  //ram data_mem(.d(data_addr_bus), .ad(), .we(), .q(), .clk(clk));
     
 endmodule

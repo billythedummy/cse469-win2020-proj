@@ -91,6 +91,18 @@ int main(int argc, char** argv)
     uut->ib = 0;
     vcdStep(uut, tfp, &main_time);
 
+    // Negative branch value
+    vcdStep(uut, tfp, &main_time);
+    uut->ib = 1;
+    uut->bv = -8;
+    vcdStep(uut, tfp, &main_time);
+
+    vcdStep(uut, tfp, &main_time);
+    uut->ib = 0;
+    vcdStep(uut, tfp, &main_time);
+
+
+    // to see the rest
     vcdStep(uut, tfp, &main_time);
     vcdStep(uut, tfp, &main_time);
 
