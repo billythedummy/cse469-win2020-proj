@@ -7,7 +7,7 @@ module mux
 
     output reg [WIDTH-1:0] out;
     input [SEL_BITS-1:0] sel;
-    input [WIDTH-1:0] in[0:2**SEL_BITS-1]; // in[0][1] accesses 1st bit of 0th byte
+    input [WIDTH * 2**SEL_BITS - 1 : 0] in;
 
     generate
         if (SEL_BITS == 1) begin
@@ -15,8 +15,8 @@ module mux
         end
         else begin
             reg [WIDTH-1:0] out_top, out_bot;
-            mux #(SEL_BITS-1, WIDTH) top ( .out(out_top), .in(in[0 : 2**(SEL_BITS-1)-1]), .sel(sel[SEL_BITS-2 : 0]) );
-            mux #(SEL_BITS-1, WIDTH) bot ( .out(out_bot), .in(in[2**(SEL_BITS-1) : 2**SEL_BITS-1]), .sel(sel[SEL_BITS-2 : 0]) );
+            mux #(SEL_BITS-1, WIDTH) top ( .out(out_top), .in(in[WIDTH*2**(SEL_BITS-1)-1 : 0]), .sel(sel[SEL_BITS-2 : 0]) );
+            mux #(SEL_BITS-1, WIDTH) bot ( .out(out_bot), .in(in[WIDTH*2**SEL_BITS-1 : WIDTH*2**(SEL_BITS-1)]), .sel(sel[SEL_BITS-2 : 0]) );
             simplemux #(WIDTH) combine ( .out(out), .in1(out_top), .in2(out_bot), .sel(sel[SEL_BITS-1]) ); // MSB goes to last one
         end
     endgenerate

@@ -1,7 +1,7 @@
 TARGET=mux_test
 TOPMODULE=mux
 .PHONY: $(TARGET)
-RTLSRC=../../cpu/bblocks
+RTLSRC=../../cpu
 all: $(TARGET)
 
 CFLAGS=-g -O3

@@ -6,26 +6,26 @@ module idec32  //instruction decoder
     clk);
     // instruction in, CPSR in,
     // ALU out, R1 out, R2 out, 
-    // instruction branch out, branch value out, branch should link (store in r14)
     // should set CPSR out, register write enable, memory write enable,
+    // instruction branch out, branch value out, branch should link (store in r14)
     // clock
 
     input [31:0] iin;
     input [3:0] cpsrin;
     output reg [3:0] alu_out, r1_out, r2_out;
-    output reg cpsrs_out, reg_we, mem_we, ib;
+    output reg cpsrs_out, reg_we, mem_we, ib, bl;
     output reg [31:0] bv;
     input clk;
 
-    wire [3:0] cond_intermediate, icond;
     wire [2:0] opcode;
-    assign icond = iin[31:28];
-    assign cond_intermediate = cpsrin ~^ icond;
+    wire shouldexec;
     assign opcode = iin[27:25];
+
+    condchecker check (.codein(iin[31:28]), .cpsrin(cpsrin), .shouldexecout(shouldexec));
 
     always @(posedge clk) begin
         // check condition, no-op (output 0) if dont match
-        if ( (icond & cond_intermediate) != 0) begin
+        if ( !shouldexec ) begin
             alu_out <= 4'b0;
             r1_out <= 4'b0;
             r2_out <= 4'b0;
@@ -48,7 +48,7 @@ module idec32  //instruction decoder
             r2_out <= iin[15:12];
         end
         else if (opcode == 3'b101) begin // branch
-            bv <= ({6{iin[23]}, iin[23:0]}) << 2;
+            bv <= {{6{iin[23]}}, iin[23:0], 2'b0};
             ib <= 1;
             bl <= iin[24];
         end

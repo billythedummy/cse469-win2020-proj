@@ -1,7 +1,7 @@
 TARGET=idec32_test
 TOPMODULE=idec32
 .PHONY: $(TARGET)
-RTLSRC=../../cpu
+RTLSRC=../../cpu/idec32
 all: $(TARGET)
 
 CFLAGS=-g -O3

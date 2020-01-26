@@ -34,6 +34,7 @@ module cpu(
   wire [31:0] data_addr_bus;
 
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
+  idec32 instr_dec();
   //ram data_mem(.d(data_addr_bus), .ad(), .we(), .q(), .clk(clk));
     
 endmodule

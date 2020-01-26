@@ -1,5 +1,5 @@
-TARGET=simplemux_test
-TOPMODULE=simplemux
+TARGET=cpu_test
+TOPMODULE=cpu
 .PHONY: $(TARGET)
 RTLSRC=../../cpu
 all: $(TARGET)

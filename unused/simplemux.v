@@ -6,7 +6,7 @@ module simplemux #(parameter WIDTH=8) (out, in1, in2, sel);
     input [WIDTH-1:0] in2;
     input sel;
 
-    always_comb begin
+    always @(*) begin
         if (sel)
             out = in2;
         else
