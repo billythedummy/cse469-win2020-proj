@@ -8,7 +8,7 @@ module regfile
     ib, bv, iout,
     clk); 
     // input1, input2
-    // write-enable, write-data (register write back), write-address, write enable
+    // write-enable, write-data (register write back), write-address
     // output1, output2,
     // isBranch, branchValue, instruction out
     // clock

@@ -17,14 +17,8 @@ double sc_time_stamp () {       // Called by $time in Verilog
 }
 
 
-void vcdStep(Videc32* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
-    uut->clk = !(uut->clk);
-    *main_time = *main_time + 1;
-    uut->eval();
-    if (tfp != NULL) {
-        tfp->dump (*main_time);
-    }
-}
+
+// POST INCREMENT
 
 int main(int argc, char** argv)
 {
@@ -54,8 +48,17 @@ int main(int argc, char** argv)
     // PUT INIT CODE HERE
     uut->clk = 1;
 
-    // always sandwich between neg then pos
-    vcdStep(uut, tfp, &main_time);
+    // Test B
+    uut->cpsrin = 0;
+    //uut->
+    for (int i = 0; i < 16; ++i) {
+        uut->eval();
+        if (tfp != NULL) {
+            tfp->dump (main_time);
+        }
+        uut->cpsrin++;
+        main_time++;
+    }
 
     uut->final();               // Done simulating
 

@@ -35,20 +35,27 @@ module idec32  //instruction decoder
         end
         // anything below this means cond code passed
         else if ( opcode == 3'b00X ) begin // logical/arithmetic
-            // I bit is CONTROL BIT see manual
+            // I bit is CONTROL BIT see manual z
+            // TO-DO: 12 bit shifter handling
             alu_out <= iin[24:21];
-            cpsrs_out <= iin[20];
             r1_out <= iin[19:16];
             r2_out <= iin[15:12];
+            cpsrs_out <= iin[20];
+            reg_we <= 1;
+            mem_we <= 0;
         end
         else if (opcode == 3'b01X) begin // load/store
-            reg_we <= iin[20]; // include or post increment?
-            mem_we <= ~iin[20];
+            // TO-DO: 12 bit shifter handling
+            //alu_out <= iin[24:21]; // THIS SHOULD BE PASSTHROUGH CODE FOR ALU
             r1_out <= iin[19:16];
             r2_out <= iin[15:12];
+            cpsrs_out <= 0; // LOAD STORE DOES NOT CHANGE CPSR FLAGS: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/BABFGBDD.html
+            reg_we <= iin[20]; // include or post increment?
+            mem_we <= ~iin[20];
         end
         else if (opcode == 3'b101) begin // branch
             bv <= {{6{iin[23]}}, iin[23:0], 2'b0};
+            // This takes 2 cycles so when this is done, PC = PC + 8
             ib <= 1;
             bl <= iin[24];
         end
