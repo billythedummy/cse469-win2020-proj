@@ -55,12 +55,17 @@ int main(int argc, char** argv)
     
     // PUT INIT CODE HERE
     // verilator smart enough to index by size specified
-    // bug? first instruction always there for 2 clock cycles
-    uut->cpu__DOT__instr_mem__DOT__mem[1] = 0xea00000d;// B 52, which is actually B 60
-    uut->cpu__DOT__instr_mem__DOT__mem[17] = 0xe1a02001; // mov r2, r1. 68 bytes = 17 words
+    // INSTRUCTIONS
+    // bug? first instruction always there for 2 clock cycles so leave it blank for now 
+    uut->cpu__DOT__instr_mem__DOT__mem[1] = 0xea00000d;// B 52, which is actually B 60 im taking one cycle extra
+    uut->cpu__DOT__instr_mem__DOT__mem[16] = 0xe1a02001; // mov r2, r1. 64 bytes = 16 words
+    uut->cpu__DOT__instr_mem__DOT__mem[17] = 0xe5934000; // ldr r4, [r3]. 68 bytes = 17 words
+    uut-> cpu__DOT__instr_mem__DOT__mem[18] = 0xdaffffed; // BLE -(8 + (4*18))+4 = -76 back to 0x04
+
+    // DATA
     uut->cpu__DOT__registers__DOT__mem[1] = 0xdeadbeef; // Put DEADBEEF in r1
-    uut->cpu__DOT__instr_mem__DOT__mem[18] = 0xe5934000; // ldr r4, [r3]. 72 bytes = 18 words
     uut->cpu__DOT__registers__DOT__mem[3] = 0xcafef00d; // Put CAFEF00D in r3
+    uut->cpu__DOT__cpsr__DOT__register = 0x10000000; // set CPSR to N != V (N=0, V=1) so ble will trigger
 
     // off we go
     uut->clk = 0;

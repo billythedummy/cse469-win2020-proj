@@ -1,5 +1,6 @@
 .text
 .align  1
+.start:
     B   .lul
     BNE .lul
     BLT .lul
@@ -17,3 +18,4 @@
     ORR r2, r1
 .lul:
     MOV r2, r1
+    BLE start

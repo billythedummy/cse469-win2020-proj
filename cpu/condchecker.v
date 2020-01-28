@@ -1,9 +1,8 @@
 module condchecker
-    (codein, cpsrin, shouldexecout, clk);
+    (codein, cpsrin, shouldexecout);
 
     // CPSR: 0 - Zero, 1 - Carry, 2 - Negative, 3 - oVerflow
     input [3:0] codein, cpsrin;
-    input clk;
     output reg shouldexecout;
 
     wire Ze, C, N, V, sel;
@@ -15,7 +14,7 @@ module condchecker
     wire [2:0] code;
     assign code = codein[3:1];
 
-    always @(posedge clk) begin
+    always @(*) begin
         case (code) 
             3'b000 : shouldexecout = sel ^ Ze; // Eq, Neq
             3'b001 : shouldexecout = sel ^ C; // Carry set/ unsigned higher or same and Carry clear/ unsigned lower

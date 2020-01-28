@@ -15,12 +15,12 @@ module cpu(
   assign led = 1'b1;
 
   // These are how you communicate back to the serial port debugger.
-  assign debug_port1 = 8'h01;
-  assign debug_port2 = 8'h02;
-  assign debug_port3 = 8'h03;
-  assign debug_port4 = 8'h04;
-  assign debug_port5 = 8'h05;
-  assign debug_port6 = 8'h06;
+  assign debug_port1 = instr_addr_bus[7:0];// 8'h01;
+  assign debug_port2 = instr_bus[7:0]; //8'h02;
+  assign debug_port3 = r1_out[7:0]; //8'h03;
+  assign debug_port4 = r2_out[7:0]; //8'h04;
+  assign debug_port5 = {4'b0, rd_bus};//8'h05;
+  assign debug_port6 = {4'b0, rn_bus};//8'h06;
   assign debug_port7 = 8'h07;
 
   // my shit
@@ -49,8 +49,7 @@ module cpu(
   idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]),
     .alu_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
     .cpsrs_out(should_set_cpsr), .reg_we(reg_we), .mem_we(dummy),
-    .ib(ib), .bv(bv), .bl(bl),
-    .clk(clk));
+    .ib(ib), .bv(bv), .bl(bl));
 
   reg32 registers(.in1(rn_bus), .in2(rd_bus),
     .we(reg_we), .wd(reg_wd), .wa(reg_wa),
