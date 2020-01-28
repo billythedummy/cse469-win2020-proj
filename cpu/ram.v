@@ -2,7 +2,7 @@
 module ram
     #(parameter WORD=4,
         parameter WIDTH=8,
-        parameter ADDR_WIDTH=8) // note ADDR_WIDTH is how many WORDS not how many BYTES
+        parameter ADDR_WIDTH=8) // note ADDR_WIDTH is how many BYTES
     (d, ad, we, q,
     clk);
     // data in, address, write enable, output,
@@ -15,7 +15,7 @@ module ram
     output reg [WORD*WIDTH-1:0] q;
     input clk;
 
-    reg [(1 << ADDR_WIDTH)*WORD*WIDTH - 1:0] mem;
+    reg [(1 << ADDR_WIDTH)*WIDTH - 1:0] mem;
 
     wire [ADDR_WIDTH-1:0] data_start;
     assign data_start[ADDR_WIDTH-1:0] = ad[ADDR_WIDTH-1:0]; // limit address to addr_width
@@ -23,9 +23,9 @@ module ram
     always @(posedge clk) begin
         // write
         if (we) begin
-            mem[ data_start*WORD*WIDTH +: WORD*WIDTH ] <= d;
+            mem[ data_start*WIDTH +: WORD*WIDTH ] <= d;
         end
         // read (always)
-        q <= mem[ data_start*WORD*WIDTH +: WORD*WIDTH ];
+        q <= mem[ data_start*WIDTH +: WORD*WIDTH ];
     end
 endmodule

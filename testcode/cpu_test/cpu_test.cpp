@@ -54,8 +54,19 @@ int main(int argc, char** argv)
     }
     
     // PUT INIT CODE HERE
-    uut->cpu__DOT__instr_mem__DOT__mem[0] = 0xDEADBEEF;
-    fullClock(uut, tfp, &main_time);
+    // verilator smart enough to index by size specified
+    // bug? first instruction always there for 2 clock cycles
+    uut->cpu__DOT__instr_mem__DOT__mem[1] = 0xea00000d;// B 52, which is actually B 60
+    uut->cpu__DOT__instr_mem__DOT__mem[17] = 0xe1a02001; // mov r2, r1. 68 bytes = 17 words
+    uut->cpu__DOT__registers__DOT__mem[1] = 0xdeadbeef; // Put DEADBEEF in r1
+    uut->cpu__DOT__instr_mem__DOT__mem[18] = 0xe5934000; // ldr r4, [r3]. 72 bytes = 18 words
+    uut->cpu__DOT__registers__DOT__mem[3] = 0xcafef00d; // Put CAFEF00D in r3
+
+    // off we go
+    uut->clk = 0;
+    for (int i = 0; i < 16; ++i) {
+        fullClock(uut, tfp, &main_time);
+    }
 
 
     uut->final();               // Done simulating

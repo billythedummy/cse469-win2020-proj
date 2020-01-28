@@ -1,14 +1,14 @@
 module pc32
     (ib, bv,
     we, wd,
-    iout, clk);
+    iaddrout, clk);
     // is branch, branch value,
     // write enable, write data
     // instruction (address) out, clock
 
     input [31:0] bv, wd;
     input ib, clk, we;
-    output reg [31:0] iout;
+    output reg [31:0] iaddrout;
 
     reg [31:0] ctr;
 
@@ -23,7 +23,7 @@ module pc32
         else begin
             ctr <= ctr + 4;
         end
-        iout <= ctr;
+        iaddrout <= ctr;
     end
 
 endmodule

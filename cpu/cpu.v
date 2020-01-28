@@ -56,7 +56,7 @@ module cpu(
     .we(reg_we), .wd(reg_wd), .wa(reg_wa),
     .out1(r1_out), .out2(r2_out),
     .ib(ib), .bv(bv), .bl(bl),
-    .iout(instr_addr_bus),
+    .iaddrout(instr_addr_bus),
     .clk(clk));
     
 endmodule

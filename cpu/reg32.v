@@ -2,7 +2,7 @@ module reg32
     (in1, in2,
     we, wd, wa,
     out1, out2,
-    ib, bv, bl, iout,
+    ib, bv, bl, iaddrout,
     clk); 
     // input1, input2
     // write-enable, write-data (register write back), write-address
@@ -18,12 +18,12 @@ module reg32
     input we, ib, clk, bl;
     input [31:0] wd, bv;
 
-    output reg [31:0] out1, out2, iout;
+    output reg [31:0] out1, out2, iaddrout;
 
     reg [15*32 - 1:0] mem; // not including pc (own module)
     wire ispc; // is write for program counter
     assign ispc = we & (wa == 15);
-    pc32 pc (.ib(ib), .bv(bv), .we(ispc), .wd(wd), .iout(iout), .clk(clk));
+    pc32 pc (.ib(ib), .bv(bv), .we(ispc), .wd(wd), .iaddrout(iaddrout), .clk(clk));
 
     always @(posedge clk) begin
         // write

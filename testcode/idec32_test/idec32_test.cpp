@@ -77,9 +77,9 @@ int main(int argc, char** argv)
     iterateCpsr(uut, tfp, &main_time); // bl bit should just be 1. Expect bv to be 40 = 0x28
 
     // Test ALU ops - all ops should be the same other than registers and opcode
-    uut->iin = 0xe1a02001; //mov r2, r1. Rn should be 0
+    uut->iin = 0xe1a02001; //mov r2, r1. Rd = r2, Rn should be 0
     fullClock(uut, tfp, &main_time);
-    uut->iin = 0xe1e03002; //mvn r3, r2. Rn should be 0
+    uut->iin = 0xe1e03002; //mvn r3, r2. Rd = r3, Rn should be 0
     fullClock(uut, tfp, &main_time);
     uut->iin = 0xe0855004; //add r5, r5, r4. Rd = Rn = r5,
     fullClock(uut, tfp, &main_time);
