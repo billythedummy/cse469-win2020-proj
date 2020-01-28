@@ -1,0 +1,19 @@
+00000000 <.lul-0x3c>:
+   0:	ea00000d 	b	3c <.lul>
+   4:	1a00000c 	bne	3c <.lul>
+   8:	ba00000b 	blt	3c <.lul>
+   c:	eb00000a 	bl	3c <.lul>
+  10:	e1a02001 	mov	r2, r1
+  14:	e1e03002 	mvn	r3, r2
+  18:	e5934000 	ldr	r4, [r3]
+  1c:	e0855004 	add	r5, r5, r4
+  20:	e0466005 	sub	r6, r6, r5
+  24:	e1570006 	cmp	r7, r6
+  28:	e1180007 	tst	r8, r7
+  2c:	e1390008 	teq	r9, r8
+  30:	e0200009 	eor	r0, r0, r9
+  34:	e1c11000 	bic	r1, r1, r0
+  38:	e1822001 	orr	r2, r2, r1
+
+0000003c <.lul>:
+  3c:	e1a02001 	mov	r2, r1

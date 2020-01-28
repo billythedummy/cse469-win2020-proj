@@ -20,10 +20,13 @@ double sc_time_stamp () {       // Called by $time in Verilog
 void iterateCpsr(Vcondchecker* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
     uut->cpsrin = 0;
     for (int i = 0; i < 16; ++i) {
-        *main_time = *main_time + 1;
-        uut->eval();
-        if (tfp != NULL) {
-            tfp->dump (*main_time);
+        for (int i = 0; i < 2; ++i) { // full clock cycle
+            uut->clk = !(uut->clk);
+            *main_time = *main_time + 1;
+            uut->eval();
+            if (tfp != NULL) {
+                tfp->dump (*main_time);
+            }
         }
         uut->cpsrin++;
     }
