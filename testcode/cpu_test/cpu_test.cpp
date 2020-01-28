@@ -19,6 +19,15 @@ double sc_time_stamp () {       // Called by $time in Verilog
     // what SystemC does
 }
 
+void fullClock(Vcpu* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
+    for (int i = 0; i < 2; ++i) { // full clock cycle
+        uut->clk = !(uut->clk);
+        *main_time = *main_time + 1;
+        uut->eval();
+        tfp->dump (*main_time);
+    }
+}
+
 int main(int argc, char** argv)
 {
     // turn on trace or not?
@@ -45,11 +54,9 @@ int main(int argc, char** argv)
     }
     
     // PUT INIT CODE HERE
-    
-    main_time++;
-    if (tfp != NULL) {
-        tfp->dump (main_time);
-    }
+    uut->cpu__DOT__instr_mem__DOT__mem[0] = 0xDEADBEEF;
+    fullClock(uut, tfp, &main_time);
+
 
     uut->final();               // Done simulating
 

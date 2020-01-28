@@ -2,12 +2,12 @@ module reg32
     (in1, in2,
     we, wd, wa,
     out1, out2,
-    ib, bv, iout,
+    ib, bv, bl, iout,
     clk); 
     // input1, input2
     // write-enable, write-data (register write back), write-address
     // output1, output2,
-    // isBranch, branchValue, instruction out
+    // isBranch, branchValue, branch should link, instruction out
     // clock
 
     // might need a b line for ldrb
@@ -15,7 +15,7 @@ module reg32
     // default last addr (r15 in this case) is PC
 
     input [3:0] in1, in2, wa;
-    input we, ib, clk;
+    input we, ib, clk, bl;
     input [31:0] wd, bv;
 
     output reg [31:0] out1, out2, iout;

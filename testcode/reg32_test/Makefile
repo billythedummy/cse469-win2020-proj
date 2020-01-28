@@ -1,5 +1,5 @@
-TARGET=regfile_test
-TOPMODULE=regfile
+TARGET=reg32_test
+TOPMODULE=reg32
 .PHONY: $(TARGET)
 RTLSRC=../../cpu
 all: $(TARGET)

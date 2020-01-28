@@ -68,7 +68,7 @@ module idec32  //instruction decoder
             rn_out <= 4'b0;
             rd_out <= 4'b0;
             cpsrs_out <= 0;
-            reg_we <= 1; // don''t forget this lol
+            reg_we <= 1; // don''t forget this to directly overwrite pc
             mem_we <= 0;
             ib <= 1;
             bl <= iin[24];

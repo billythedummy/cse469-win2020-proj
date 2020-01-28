@@ -27,16 +27,36 @@ module cpu(
   wire dummy;
   assign dummy = 1'b0;
 
-  wire [31:0] instr_bus;
-  wire [31:0] instr_addr_bus;
+  wire [31:0] instr_bus, instr_addr_bus;
 
-  wire [31:0] data_bus;
-  wire [31:0] data_addr_bus;
+  wire [31:0] data_bus, data_addr_bus;
+
+  wire [31:0] cpsr_bus;
+  wire should_set_cpsr;
+
+  wire [31:0] r1_out, r2_out, reg_wd, bv;
+  wire [3:0] rd_bus, rn_bus, reg_wa;
+  wire reg_we;
+  wire ib, bl;
+
+  wire [3:0] alu_opcode;
 
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
   //ram data_mem(.d(data_addr_bus), .ad(), .we(), .q(), .clk(clk));
-  //idec32 idec();
-  //cpsr32 cpsr();
-  // regfile registers();
+
+  cpsr32 cpsr(.we(should_set_cpsr), .flagsin({4{dummy}}), .out(cpsr_bus), .clk(clk));
+
+  idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]),
+    .alu_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
+    .cpsrs_out(should_set_cpsr), .reg_we(reg_we), .mem_we(dummy),
+    .ib(ib), .bv(bv), .bl(bl),
+    .clk(clk));
+
+  reg32 registers(.in1(rn_bus), .in2(rd_bus),
+    .we(reg_we), .wd(reg_wd), .wa(reg_wa),
+    .out1(r1_out), .out2(r2_out),
+    .ib(ib), .bv(bv), .bl(bl),
+    .iout(instr_addr_bus),
+    .clk(clk));
     
 endmodule
