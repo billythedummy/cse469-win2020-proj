@@ -23,7 +23,7 @@ module idec32  //instruction decoder
 
     always @(*) begin
         // check condition, no-op (output 0) if dont match
-        if ( !shouldexec ) begin
+        if ( !shouldexec || iin == 32'b0 ) begin
             alu_out = 4'b0;
             rn_out = 4'b0;
             rd_out = 4'b0;
@@ -35,7 +35,7 @@ module idec32  //instruction decoder
             bv = 32'b0;
         end
         // anything below this means cond code passed
-        else if ( opcode == 3'b00X ) begin // logical/arithmetic
+        else if ( opcode == 3'b000 ) begin // logical/arithmetic
             // I bit is CONTROL BIT see manual
             // TO-DO: 12 bit shifter handling
             alu_out = iin[24:21];
@@ -48,7 +48,7 @@ module idec32  //instruction decoder
             bl = 0;
             bv = 32'b0;
         end
-        else if (opcode == 3'b01X) begin // load/store
+        else if (opcode == 3'b010) begin // load/store
             // TO-DO: 12 bit shifter handling
             alu_out = iin[24:21]; // THIS SHOULD BE PASSTHROUGH CODE FOR ALU
             rn_out = iin[19:16];
@@ -66,7 +66,7 @@ module idec32  //instruction decoder
             rn_out = 4'b0;
             rd_out = 4'b0;
             cpsrs_out = 0;
-            reg_we = 1; // don''t forget this to directly overwrite pc
+            reg_we = 0; // might need to change this
             mem_we = 0;
             ib = 1;
             bl = iin[24];

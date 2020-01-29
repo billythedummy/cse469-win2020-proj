@@ -21,7 +21,7 @@ module cpu(
   assign debug_port4 = r2_out[7:0]; //8'h04;
   assign debug_port5 = {4'b0, rd_bus};//8'h05;
   assign debug_port6 = {4'b0, rn_bus};//8'h06;
-  assign debug_port7 = 8'h07;
+  assign debug_port7 = {4'b0, cpsr_bus[31:28]};//8'h07;
 
   // my shit
   // BIG ENDIAN
