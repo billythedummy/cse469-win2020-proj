@@ -5,3 +5,4 @@ test.arm
 ._*.v
 obj_dir/
 .vscode/
+*.zip
