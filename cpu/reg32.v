@@ -27,6 +27,7 @@ module reg32
 
     integer index;
     always @(posedge clk) begin
+        // no reset for other registers..
         // write
         if (we & !ispc) begin
             for (index=0; index<4; index=index+1) begin
