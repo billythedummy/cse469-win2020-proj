@@ -42,12 +42,16 @@ module cpu(
 
   wire [3:0] alu_opcode;
 
+  wire ispb_q;
+
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
   //ram data_mem(.d(data_addr_bus), .ad(), .we(), .q(), .clk(clk));
 
   cpsr32 cpsr(.we(should_set_cpsr), .flagsin({4{dummy}}), .out(cpsr_bus), .clk(clk));
 
-  idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]),
+  dff ispb(.d(ib), .q(ispb_q), .clk(clk));
+
+  idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]), .ispb(ispb_q),
     .alu_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
     .cpsrs_out(should_set_cpsr), .reg_we(reg_we), .mem_we(dummy),
     .ib(ib), .bv(bv), .bl(bl));

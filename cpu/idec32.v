@@ -1,15 +1,16 @@
 module idec32  //instruction decoder
-    (iin, cpsrin,
+    (iin, cpsrin, ispb,
     alu_out, rn_out, rd_out,
     cpsrs_out, reg_we, mem_we,
     ib, bv, bl);
-    // instruction in, CPSR in,
+    // instruction in, CPSR in, is previous instruction branch in
     // ALU out, Rn out, Rd out, 
     // should set CPSR out, register write enable, memory write enable,
     // instruction branch out, branch value out, branch should link (store in r14)
     // clock
 
     input [31:0] iin;
+    input ispb;
     input [3:0] cpsrin;
     output reg [3:0] alu_out, rn_out, rd_out;
     output reg cpsrs_out, reg_we, mem_we, ib, bl;
@@ -23,7 +24,7 @@ module idec32  //instruction decoder
 
     always @(*) begin
         // check condition, no-op (output 0) if dont match
-        if ( !shouldexec || iin == 32'b0 ) begin
+        if ( !shouldexec || iin == 32'b0 || ispb ) begin
             alu_out = 4'b0;
             rn_out = 4'b0;
             rd_out = 4'b0;
