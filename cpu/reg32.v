@@ -27,13 +27,8 @@ module reg32
 
     integer index;
     always @(posedge clk) begin
-        if (reset) begin
-            for (index=0; index<4*15; index=index+1) begin
-                mem[index] <= 0;
-            end
-        end
         // write
-        else if (we & !ispc) begin
+        if (we & !ispc) begin
             for (index=0; index<4; index=index+1) begin
                 mem[ {28'b0, wa}*4 + index] <= wd[(4-index-1)*8 +: 8];
             end

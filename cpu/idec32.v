@@ -23,6 +23,16 @@ module idec32  //instruction decoder
     condchecker check (.codein(iin[31:28]), .cpsrin(cpsrin), .shouldexecout(shouldexec));
 
     always @(*) begin
+        // no-op if not passed
+        alu_out = 4'b0;
+        rn_out = 4'b0;
+        rd_out = 4'b0;
+        cpsrs_out = 0;
+        reg_we = 0;
+        mem_we = 0;
+        ib = 0;
+        bl = 0;
+        bv = 32'b0;
         // cond code passed
         if (shouldexec && iin != 32'b0 && !ispb) begin
             case (opcode)
@@ -75,18 +85,6 @@ module idec32  //instruction decoder
                     bv = 32'b0;
                 end
             endcase
-        end
-        else begin
-            // no-op if not passed
-            alu_out = 4'b0;
-            rn_out = 4'b0;
-            rd_out = 4'b0;
-            cpsrs_out = 0;
-            reg_we = 0;
-            mem_we = 0;
-            ib = 0;
-            bl = 0;
-            bv = 32'b0;
         end
     end
 

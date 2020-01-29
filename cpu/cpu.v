@@ -21,7 +21,7 @@ module cpu(
   assign debug_port4 = r2_out[7:0]; //8'h04;
   assign debug_port5 = {4'b0, rd_bus};//8'h05;
   assign debug_port6 = {4'b0, rn_bus};//8'h06;
-  assign debug_port7 = {4'b0, cpsr_bus[31:28]};//8'h07;
+  assign debug_port7 = {7'b0, nreset};//{4'b0, cpsr_bus[31:28]};//8'h07;
 
   // my shit
   // BIG ENDIAN
@@ -55,7 +55,7 @@ module cpu(
     .alu_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
     .cpsrs_out(should_set_cpsr), .reg_we(reg_we), .mem_we(dummy),
     .ib(ib), .bv(bv), .bl(bl));
-
+  
   reg32 registers(.in1(rn_bus), .in2(rd_bus),
     .we(reg_we), .wd(reg_wd), .wa(reg_wa),
     .out1(r1_out), .out2(r2_out),
