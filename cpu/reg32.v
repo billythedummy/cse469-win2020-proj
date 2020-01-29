@@ -20,18 +20,28 @@ module reg32
 
     output reg [31:0] out1, out2, iaddrout;
 
-    reg [15*32 - 1:0] mem; // not including pc (own module)
+    reg [7:0] mem [0:15*4-1]; // not including pc (own module)
     wire ispc; // is write for program counter
     assign ispc = we & (wa == 15);
     pc32 pc (.ib(ib), .bv(bv), .we(ispc), .wd(wd), .iaddrout(iaddrout), .clk(clk));
 
+    integer index;
     always @(posedge clk) begin
         // write
         if (we & !ispc) begin
-            mem[ wa*32 +: 32 ] <= wd;
+            for (index=0; index<4; index=index+1) begin
+                mem[ {28'b0, wa}*4 + index] <= wd[(4-index-1)*8 +: 8];
+            end
         end
         // out
-        out2 <= mem[in2*32 +: 32];
-        out1 <= mem[in1*32 +: 32];
+        for (index=0; index<4; index=index+1) begin
+            out2[(4-index-1)*8 +: 8] <= mem[{28'b0, in2}*4 + index];
+        end
+        for (index=0; index<4; index=index+1) begin
+            out1[(4-index-1)*8 +: 8] <= mem[{28'b0, in1}*4 + index];
+        end
     end
+
+    // LAB 1 REGISTERS
+    initial $readmemh("testcode/hexcode_tests/lab1_reg.mem", mem);
 endmodule

@@ -24,6 +24,7 @@ module cpu(
   assign debug_port7 = 8'h07;
 
   // my shit
+  // BIG ENDIAN
   wire dummy;
   assign dummy = 1'b0;
 
@@ -57,5 +58,12 @@ module cpu(
     .ib(ib), .bv(bv), .bl(bl),
     .iaddrout(instr_addr_bus),
     .clk(clk));
-    
+  
+  // Note: cant do this in synthesis
+  /*
+  initial begin
+      $readmemh("../../testcode/hexcode_tests/lab1_instr.mem", instr_mem.mem);
+      $readmemh("../../testcode/hexcode_tests/lab1_reg.mem", registers.mem);
+      $readmemh("../../testcode/hexcode_tests/lab1_cpsr.mem", cpsr.register);
+  end*/
 endmodule

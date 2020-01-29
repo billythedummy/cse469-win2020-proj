@@ -59,10 +59,9 @@ int main(int argc, char** argv)
         std::cout << vcdname << std::endl;
         tfp->open(vcdname.c_str());
     }
-    /*
     // Test B
     uut->iin = 0xea00000d; // B 60 | pc = pc + 8 + 4*d = pc + 60
-    iterateCpsr(uut, tfp, &main_time); // expect bv to be 52 = 0x34*/
+    iterateCpsr(uut, tfp, &main_time); // expect bv to be 52 = 0x34
 
     // Test BNE
     uut->iin = 0x1a00000c; // B 56 | pc = pc + 8 + 4*c = pc + 56
@@ -71,7 +70,7 @@ int main(int argc, char** argv)
     // Test BLT
     uut->iin = 0xba00000b; // B 52 | pc = pc + 8 + 4*b = pc + 52
     iterateCpsr(uut, tfp, &main_time); // expect ib = 0 when not cond, bv to be 44 = 0x2c when cond (N != V)
-    /*
+    
     // Test BL 
     uut->iin = 0xeb00000a; // BL 48 | pc = pc + 8 + 4*a = pc + 48
     iterateCpsr(uut, tfp, &main_time); // bl bit should just be 1. Expect bv to be 40 = 0x28
@@ -101,7 +100,7 @@ int main(int argc, char** argv)
     // Test Load
     uut->iin = 0xe5934000; //ldr r4, [r3] // Rd = 4, Rn=3
     fullClock(uut, tfp, &main_time);
-    */
+    
     // one more so last one is visible
     main_time++;
     uut->eval();

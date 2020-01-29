@@ -15,17 +15,27 @@ module ram
     output reg [WORD*WIDTH-1:0] q;
     input clk;
 
-    reg [(1 << ADDR_WIDTH)*WIDTH - 1:0] mem;
+    reg [WIDTH - 1:0] mem [0 : (1 << ADDR_WIDTH)-1];
 
     wire [ADDR_WIDTH-1:0] data_start;
     assign data_start[ADDR_WIDTH-1:0] = ad[ADDR_WIDTH-1:0]; // limit address to addr_width
 
+    integer index;
     always @(posedge clk) begin
         // write
         if (we) begin
-            mem[ data_start*WIDTH +: WORD*WIDTH ] <= d;
+            // shitty vanilla verilog cant do multi array assign
+            for (index=0; index<WORD; index=index+1) begin
+                mem[ad + index] <= d[(WORD-index-1)*WIDTH +: WIDTH];
+            end
         end
         // read (always)
-        q <= mem[ data_start*WIDTH +: WORD*WIDTH ];
+        for (index=0; index<WORD; index=index+1) begin
+            q[(WORD-index-1)*WIDTH +: WIDTH] <= mem[ad + index];
+        end
     end
+
+    // LAB 1 INSTR
+    initial $readmemh("testcode/hexcode_tests/lab1_instr.mem", mem);
+
 endmodule
