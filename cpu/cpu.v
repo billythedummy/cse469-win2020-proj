@@ -60,7 +60,7 @@ module cpu(
     .we(reg_we), .wd(reg_wd), .wa(reg_wa),
     .out1(r1_out), .out2(r2_out),
     .ib(ib), .bv(bv), .bl(bl),
-    .iaddrout(instr_addr_bus),
+    .iaddrout(instr_addr_bus), .reset(nreset),
     .clk(clk));
   
   // Note: cant do this in synthesis

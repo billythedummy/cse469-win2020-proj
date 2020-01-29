@@ -25,6 +25,15 @@ void vcdStep(Vreg32* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
     }
 }
 
+void fullClock(Vreg32* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
+    for (int i = 0; i < 2; ++i) {
+        uut->clk = !(uut->clk);
+        *main_time = *main_time + 1;
+        uut->eval();
+        tfp->dump (*main_time);
+    }
+}
+
 int main(int argc, char** argv)
 {
     // turn on trace or not?
@@ -51,71 +60,62 @@ int main(int argc, char** argv)
     }
     
     // PUT INIT CODE HERE
-    uut->clk = 1;
+    uut->clk = 0;
     
     // check in1 writing and reading
-    vcdStep(uut, tfp, &main_time);
     uut->we = 1;
     uut->wa = 6;
     uut->wd = 0xCAFEF00D;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
     // check if CAFEF00D is stored
-    vcdStep(uut, tfp, &main_time);
     uut->in1 = uut->wa;
     uut->in2 = 9;
     uut->we = 0;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
     // check in2 writing and reading
-    vcdStep(uut, tfp, &main_time);
     uut->we = 1;
     uut->wa = 9;
     uut->wd = 0xDEADBEEF;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
     // DEADBEEF should be at out2, CAFEF00D should be at out1
-    vcdStep(uut, tfp, &main_time);
     uut->we = 0;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
     // Check branching
-    vcdStep(uut, tfp, &main_time);
     uut->ib = 1;
     uut->bv = 16;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
-    vcdStep(uut, tfp, &main_time);
     uut->ib = 0;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
     // Negative branch value
-    vcdStep(uut, tfp, &main_time);
     uut->ib = 1;
     uut->bv = -8;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
-    vcdStep(uut, tfp, &main_time);
     uut->ib = 0;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
     // Overwrite PC
-    vcdStep(uut, tfp, &main_time);
     uut->we = 1;
     uut->wa = 15;
     uut->wd = 0xFACEBADE;
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
 
-    vcdStep(uut, tfp, &main_time);
     uut->ib = 0;
-    vcdStep(uut, tfp, &main_time);
+    uut->we = 0;
+    uut->wd = 0x69;
+    uut->wa = 0;
+    fullClock(uut, tfp, &main_time);
 
 
     // to see the rest
-    vcdStep(uut, tfp, &main_time);
-    vcdStep(uut, tfp, &main_time);
-
-    vcdStep(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
+    fullClock(uut, tfp, &main_time);
     
     uut->final();               // Done simulating
 
