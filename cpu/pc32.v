@@ -1,29 +1,35 @@
 module pc32
     (ib, bv,
     we, wd,
-    iaddrout, clk);
+    iaddrout, reset,
+    clk);
     // is branch, branch value,
     // write enable, write data
     // instruction (address) out, clock
 
-    input [31:0] bv, wd;
-    input ib, clk, we;
+    input signed [31:0] bv, wd;
+    input ib, clk, we, reset;
     output reg [31:0] iaddrout;
 
-    reg [31:0] ctr;
+    reg signed [31:0] wdff;
+    reg signed [31:0] ctr;
 
     always @(posedge clk) begin
-        // write enable has highest precedence
-        if (we) begin
-            ctr <= wd;
+        wdff <= wd;
+        if (reset) begin
+            iaddrout <= 0;
+            ctr <= 0;
+            wdff <= 0;
         end
-        else if (ib) begin
-            ctr <= ctr + bv;
+        else if (we) begin
+            ctr <= wdff;
+            iaddrout <= wdff;
         end
         else begin
-            ctr <= ctr + 4;
+            if (ib) ctr <= ctr + bv;
+            else ctr <= ctr + 4;
+            iaddrout <= ctr;
         end
-        iaddrout <= ctr;
     end
 
 endmodule
