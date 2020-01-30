@@ -21,7 +21,7 @@ module reg32
     input we, ib, clk, bl, reset;
     input [`FULLW - 1:0] wd, bv;
 
-    output reg [`FULLW:0] out1, out2, iaddrout;
+    output reg [`FULLW - 1:0] out1, out2, iaddrout;
 
     reg [`WIDTH-1:0] mem [0 : ( (1 << ADDR_WIDTH) -1 )*`WORD-1]; // not including pc (own module)
     wire ispc; // is write for program counter

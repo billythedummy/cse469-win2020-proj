@@ -1,6 +1,6 @@
 module dff (d, q, clk);
     input d, clk;
-    output q;
+    output reg q;
 
     always @(posedge clk) begin
         q <= d;

@@ -62,7 +62,7 @@ module cpu(
     .we(reg_we), .wd(reg_wd), .wa(reg_wa),
     .out1(r1_out), .out2(r2_out),
     .ib(ib), .bv(bv), .bl(bl),
-    .iaddrout(instr_addr_bus), .reset(~nreset), // set reset to 0 for simulations
+    .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset), // set reset to 0 for simulations
     .clk(clk));
   
   // Note: cant do this in synthesis
