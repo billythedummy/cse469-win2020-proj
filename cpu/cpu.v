@@ -65,8 +65,7 @@ module cpu(
     .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset), // set reset to 0 for simulations
     .clk(clk));
   
-  // Note: cant do this in synthesis
-  
+  // Note: cant do this in synthesis  
   initial begin
     if (`IS_SIM) begin
       $readmemh("../../testcode/hexcode_tests/lab1_instr.mem", instr_mem.mem);
