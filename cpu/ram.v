@@ -17,9 +17,6 @@ module ram
 
     reg [`WIDTH - 1:0] mem [0 : (1 << ADDR_WIDTH)-1];
 
-    wire [ADDR_WIDTH-1:0] data_start;
-    assign data_start[ADDR_WIDTH-1:0] = ad[ADDR_WIDTH-1:0]; // limit address to addr_width
-
     integer index;
     always @(posedge clk) begin
         // write

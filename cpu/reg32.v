@@ -1,6 +1,7 @@
 `include "defines.v"
 
 module reg32
+    #(parameter ADDR_WIDTH=4)
     (in1, in2,
     we, wd, wa,
     out1, out2,
@@ -16,13 +17,13 @@ module reg32
 
     // default last addr (r15 in this case) is PC
 
-    input [3:0] in1, in2, wa;
+    input [ADDR_WIDTH-1:0] in1, in2, wa;
     input we, ib, clk, bl, reset;
     input [`FULLW - 1:0] wd, bv;
 
-    output reg [31:0] out1, out2, iaddrout;
+    output reg [`FULLW:0] out1, out2, iaddrout;
 
-    reg [7:0] mem [0:16*4-1]; // not including pc (own module)
+    reg [`WIDTH-1:0] mem [0 : ( (1 << ADDR_WIDTH) -1 )*`WORD-1]; // not including pc (own module)
     wire ispc; // is write for program counter
     assign ispc = we & (wa == 15); 
     pc32 pc (.ib(ib), .bv(bv), .we(ispc), .wd(wd), .iaddrout(iaddrout), .clk(clk), .reset(reset));
@@ -34,16 +35,16 @@ module reg32
         // no reset for other registers..
         // write
         if (wemain) begin
-            for (index=0; index<4; index=index+1) begin
-                mem[ {28'b0, wa}*4 + index] <= wd[(4-index-1)*8 +: 8];
+            for (index=0; index<`WORD; index=index+1) begin
+                mem[ {28'b0, wa}*`WORD + index] <= wd[(`WORD-index-1)*`WIDTH +: `WIDTH];
             end
         end
         // out
         for (index=0; index<4; index=index+1) begin
-            out2[(4-index-1)*8 +: 8] <= mem[{28'b0, in2}*4 + index];
+            out2[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, in2}*`WORD + index];
         end
         for (index=0; index<4; index=index+1) begin
-            out1[(4-index-1)*8 +: 8] <= mem[{28'b0, in1}*4 + index];
+            out1[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, in1}*`WORD + index];
         end
     end
 

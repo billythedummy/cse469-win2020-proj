@@ -1,3 +1,5 @@
+`include "defines.v"
+
 module pc32
     (ib, bv,
     we, wd,
@@ -7,12 +9,12 @@ module pc32
     // write enable, write data
     // instruction (address) out, clock
 
-    input signed [31:0] bv, wd;
+    input signed [`FULLW-1:0] bv, wd;
     input ib, clk, we, reset;
-    output reg [31:0] iaddrout;
+    output reg [`FULLW-1:0] iaddrout;
 
-    reg signed [31:0] wdff;
-    reg signed [31:0] ctr;
+    reg signed [`FULLW-1:0] wdff;
+    reg signed [`FULLW-1:0] ctr;
 
     always @(posedge clk) begin
         wdff <= wd;
