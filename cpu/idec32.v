@@ -1,3 +1,10 @@
+`include "defines.v"
+
+localparam OP_TYPE_W = 3; 
+localparam OP_LOGICAL = 3'b000;
+localparam OP_LDSTR = 3'b010;
+localparam OP_BRANCH = 3'b101;
+
 module idec32  //instruction decoder
     (iin, cpsrin, ispb,
     alu_out, rn_out, rd_out,
@@ -9,16 +16,17 @@ module idec32  //instruction decoder
     // instruction branch out, branch value out, branch should link (store in r14)
     // clock
 
-    input [31:0] iin;
+    input [`FULLW-1 : 0] iin;
     input ispb;
-    input [3:0] cpsrin;
-    output reg [3:0] alu_out, rn_out, rd_out;
+    input [`FLAGSW-1 : 0] cpsrin;
+    output reg [`ALUAW-1 : 0] alu_out;
+    output reg [`REGAW-1 : 0] rn_out, rd_out;
     output reg cpsrs_out, reg_we, mem_we, ib, bl;
-    output reg [31:0] bv;
+    output reg [`FULLW-1 : 0] bv;
 
-    wire [2:0] opcode;
+    wire [OP_TYPE_W-1 : 0] optype;
     wire shouldexec;
-    assign opcode = iin[27:25];
+    assign optype = iin[27:25];
 
     condchecker check (.codein(iin[31:28]), .cpsrin(cpsrin), .shouldexecout(shouldexec));
 
@@ -35,8 +43,8 @@ module idec32  //instruction decoder
         bv = 32'b0;
         // cond code passed
         if (shouldexec && iin != 32'b0 && !ispb) begin
-            case (opcode)
-                3'b000: begin // logical/arithmetic
+            case (optype)
+                OP_LOGICAL: begin // logical/arithmetic
                     // I bit is CONTROL BIT see manual
                     // TO-DO: 12 bit shifter handling
                     alu_out = iin[24:21];
@@ -49,7 +57,7 @@ module idec32  //instruction decoder
                     bl = 0;
                     bv = 32'b0;
                 end
-                3'b010: begin // load/store
+                OP_LDSTR: begin // load/store
                     // TO-DO: 12 bit shifter handling
                     alu_out = iin[24:21]; // THIS SHOULD BE PASSTHROUGH CODE FOR ALU
                     rn_out = iin[19:16];
@@ -61,7 +69,7 @@ module idec32  //instruction decoder
                     bl = 0;
                     bv = 32'b0;
                 end
-                3'b101: begin // branch
+                OP_BRANCH: begin // branch
                     // This takes 2 cycles so when this is done, PC = PC + 8
                     alu_out = 4'b0;
                     rn_out = 4'b0;
@@ -71,7 +79,7 @@ module idec32  //instruction decoder
                     mem_we = 0;
                     ib = 1;
                     bl = iin[24];
-                    bv = {{6{iin[23]}}, iin[23:0], 2'b0}; // 32 bit
+                    bv = {{6{iin[23]}}, iin[23:0], 2'b0}; // sign extend and << 2
                 end
                 default: begin // not sure/ unsupported, just no-op
                     alu_out = 4'b0;

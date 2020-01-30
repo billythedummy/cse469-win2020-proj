@@ -1,3 +1,5 @@
+`include "defines.v"
+
 module cpu(
   input wire clk,
   input wire nreset,
@@ -28,26 +30,26 @@ module cpu(
   wire dummy;
   assign dummy = 1'b0;
 
-  wire [31:0] instr_bus, instr_addr_bus;
+  wire [`FULLW-1 : 0] instr_bus, instr_addr_bus;
 
-  wire [31:0] data_bus, data_addr_bus;
+  wire [`FULLW-1 : 0] data_bus, data_addr_bus;
 
-  wire [31:0] cpsr_bus;
+  wire [`FULLW-1 : 0] cpsr_bus;
   wire should_set_cpsr;
 
-  wire [31:0] r1_out, r2_out, reg_wd, bv;
-  wire [3:0] rd_bus, rn_bus, reg_wa;
+  wire [`FULLW-1 : 0] r1_out, r2_out, reg_wd, bv;
+  wire [`REGAW-1 : 0] rd_bus, rn_bus, reg_wa;
   wire reg_we;
   wire ib, bl;
 
-  wire [3:0] alu_opcode;
+  wire [`ALUAW-1 : 0] alu_opcode;
 
   wire ispb_q;
 
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
   //ram data_mem(.d(data_addr_bus), .ad(), .we(), .q(), .clk(clk));
 
-  cpsr32 cpsr(.we(should_set_cpsr), .flagsin({4{dummy}}), .out(cpsr_bus), .clk(clk));
+  register cpsr(.we(should_set_cpsr), .d({32{dummy}}), .q(cpsr_bus), .clk(clk));
 
   dff ispb(.d(ib), .q(ispb_q), .clk(clk));
 
@@ -60,14 +62,14 @@ module cpu(
     .we(reg_we), .wd(reg_wd), .wa(reg_wa),
     .out1(r1_out), .out2(r2_out),
     .ib(ib), .bv(bv), .bl(bl),
-    .iaddrout(instr_addr_bus), .reset(~nreset),
+    .iaddrout(instr_addr_bus), .reset(~nreset), // set reset to 0 for simulations
     .clk(clk));
   
   // Note: cant do this in synthesis
-  /*
+  
   initial begin
       $readmemh("../../testcode/hexcode_tests/lab1_instr.mem", instr_mem.mem);
       $readmemh("../../testcode/hexcode_tests/lab1_reg.mem", registers.mem);
-      $readmemh("../../testcode/hexcode_tests/lab1_cpsr.mem", cpsr.register);
-  end*/
+      $readmemh("../../testcode/hexcode_tests/lab1_cpsr.mem", cpsr.mem);
+  end
 endmodule

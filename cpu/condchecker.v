@@ -1,3 +1,5 @@
+`include "defines.v"
+
 module condchecker
     (codein, cpsrin, shouldexecout);
 

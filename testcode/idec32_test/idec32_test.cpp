@@ -18,7 +18,6 @@ double sc_time_stamp () {       // Called by $time in Verilog
 
 void fullClock(Videc32* uut, VerilatedVcdC* tfp, vluint64_t* main_time) {
     for (int i = 0; i < 2; ++i) { // full clock cycle
-        uut->clk = !(uut->clk);
         *main_time = *main_time + 1;
         uut->eval();
         tfp->dump (*main_time);

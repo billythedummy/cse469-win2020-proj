@@ -1,3 +1,5 @@
+`include "defines.v"
+
 module reg32
     (in1, in2,
     we, wd, wa,
@@ -16,20 +18,22 @@ module reg32
 
     input [3:0] in1, in2, wa;
     input we, ib, clk, bl, reset;
-    input [31:0] wd, bv;
+    input [`FULLW - 1:0] wd, bv;
 
     output reg [31:0] out1, out2, iaddrout;
 
-    reg [7:0] mem [0:15*4-1]; // not including pc (own module)
+    reg [7:0] mem [0:16*4-1]; // not including pc (own module)
     wire ispc; // is write for program counter
     assign ispc = we & (wa == 15); 
     pc32 pc (.ib(ib), .bv(bv), .we(ispc), .wd(wd), .iaddrout(iaddrout), .clk(clk), .reset(reset));
+    wire wemain;
+    assign wemain = we & !ispc;
 
     integer index;
     always @(posedge clk) begin
         // no reset for other registers..
         // write
-        if (we & !ispc) begin
+        if (wemain) begin
             for (index=0; index<4; index=index+1) begin
                 mem[ {28'b0, wa}*4 + index] <= wd[(4-index-1)*8 +: 8];
             end
@@ -44,5 +48,5 @@ module reg32
     end
 
     // LAB 1 REGISTERS
-    initial $readmemh("testcode/hexcode_tests/lab1_reg.mem", mem);
+    //initial $readmemh("testcode/hexcode_tests/lab1_reg.mem", mem);
 endmodule
