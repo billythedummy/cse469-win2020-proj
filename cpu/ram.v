@@ -36,6 +36,6 @@ module ram
     end
 
     // LAB 1 INSTR
-    //initial $readmemh("testcode/hexcode_tests/lab1_instr.mem", mem);
+    if (!`IS_SIM) initial $readmemh("testcode/hexcode_tests/lab1_instr.mem", mem);
 
 endmodule

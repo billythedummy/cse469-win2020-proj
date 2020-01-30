@@ -68,8 +68,10 @@ module cpu(
   // Note: cant do this in synthesis
   
   initial begin
+    if (`IS_SIM) begin
       $readmemh("../../testcode/hexcode_tests/lab1_instr.mem", instr_mem.mem);
       $readmemh("../../testcode/hexcode_tests/lab1_reg.mem", registers.mem);
       $readmemh("../../testcode/hexcode_tests/lab1_cpsr.mem", cpsr.mem);
+    end
   end
 endmodule

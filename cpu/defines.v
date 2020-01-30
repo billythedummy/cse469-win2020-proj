@@ -1,6 +1,7 @@
 `ifndef _defines_v_
 `define _defines_v_
 
+`define IS_SIM 0 
 `define WORD 4 // how many bytes in word
 `define WIDTH 8 // how many bit in bytw
 `define FULLW (`WORD * `WIDTH) // how many bits in word

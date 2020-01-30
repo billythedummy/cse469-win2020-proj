@@ -48,5 +48,5 @@ module reg32
     end
 
     // LAB 1 REGISTERS
-    //initial $readmemh("testcode/hexcode_tests/lab1_reg.mem", mem);
+    if (!`IS_SIM) initial $readmemh("testcode/hexcode_tests/lab1_reg.mem", mem);
 endmodule
