@@ -54,6 +54,8 @@ for port in ports:
                 if thiscycle != lastcycle:
                     sys.stdout.write("\n")
                 lastcycle = thiscycle
+            except KeyboardInterrupt:
+                exit()
             except:
                 errors = errors + 1
 
