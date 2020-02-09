@@ -51,7 +51,7 @@ module cpu(
 
   register cpsr(.we(should_set_cpsr), .d({32{dummy}}), .q(cpsr_bus), .clk(clk));
 
-  dff ispb(.d(ib), .q(ispb_q), .clk(clk));
+  dff #(.WIDTH(1)) ispb(.d(ib), .q(ispb_q), .clk(clk));
 
   idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]), .ispb(ispb_q),
     .alu_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
