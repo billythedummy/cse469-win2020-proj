@@ -72,6 +72,8 @@ int main(int argc, char** argv)
     uut->in1 = uut->wa;
     uut->in2 = 9;
     uut->we = 0;
+    uut->wa = 0;
+    uut->wd = 0;
     fullClock(uut, tfp, &main_time);
 
     // check in2 writing and reading
@@ -82,6 +84,8 @@ int main(int argc, char** argv)
 
     // DEADBEEF should be at out2, CAFEF00D should be at out1
     uut->we = 0;
+    uut->wa = 0;
+    uut->wd = 0;
     fullClock(uut, tfp, &main_time);
 
     // Check branching
