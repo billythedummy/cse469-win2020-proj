@@ -49,7 +49,7 @@ module cpu(
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
   //ram data_mem(.d(data_addr_bus), .ad(), .we(), .q(), .clk(clk));
 
-  register cpsr(.we(should_set_cpsr), .d({32{dummy}}), .q(cpsr_bus), .clk(clk));
+  //register cpsr(.we(should_set_cpsr), .d({32{dummy}}), .q(cpsr_bus), .clk(clk));
 
   dff #(.WIDTH(1)) ispb(.d(ib), .q(ispb_q), .clk(clk));
 

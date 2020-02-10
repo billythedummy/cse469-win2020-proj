@@ -40,10 +40,10 @@ module reg32
             end
         end
         // out
-        for (index=0; index<4; index=index+1) begin
+        for (index=0; index<`WORD; index=index+1) begin
             out2[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, in2}*`WORD + index];
         end
-        for (index=0; index<4; index=index+1) begin
+        for (index=0; index<`WORD; index=index+1) begin
             out1[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, in1}*`WORD + index];
         end
     end

@@ -15,6 +15,7 @@
 `define ASR 2'b10 // code for ARITHMETIC SHIFT RIGHT
 `define ROR 2'b11 // code for ROTATE RIGHT, RRX is just checking for extra bit
 // ZCNV flag indices
+`define FLAGS_START 28
 `define V_i 0
 `define C_i 1
 `define Z_i 2

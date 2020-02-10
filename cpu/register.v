@@ -15,10 +15,15 @@ module register
         if (we) begin
             for (index=0; index<`WORD; index=index+1) begin
                 mem[index] <= d[(`WORD-index-1)*`WIDTH +: `WIDTH];
+                q[index*`WIDTH +: `WIDTH] <= d[index*`WIDTH +: `WIDTH];
             end
         end
-        for (index=0; index<`WORD; index=index+1) begin
-            q[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[index];
+        // can't seem to infer this as block ram so gotta do this
+        // assign q in write block shit to ensure 1 clock delay
+        else begin
+            for (index=0; index<`WORD; index=index+1) begin
+                q[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[index];
+            end
         end
     end
 
