@@ -51,12 +51,16 @@ int main(int argc, char** argv)
     }
     
     uut->clk = 0;
+    fullClock(uut, tfp, &main_time);
     uut->shouldsetcpsr = 0b0010;
     uut->cpsrwd =0b0010;
     fullClock(uut, tfp, &main_time);
 
     uut->shouldsetcpsr = 0b0000;
     uut->cpsrwd =0b0000;
+    fullClock(uut, tfp, &main_time);
+
+    uut->shouldsetcpsr = 0b0010;
     fullClock(uut, tfp, &main_time);
 
     fullClock(uut, tfp, &main_time);
