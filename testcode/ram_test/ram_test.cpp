@@ -45,7 +45,8 @@ int main(int argc, char** argv)
     int testD = 0xDEADBEEF;
     uut->clk = 1;
     int shouldAssert = 0;
-    for (int i = 0; i < 17; ++i) //gotta add +1 for the last eval, *2 just to make sure order of sel++ and eval() dont affect
+    uut->en = 1;
+    for (int i = 0; i < 16; ++i) //gotta add +1 for the last eval, *2 just to make sure order of sel++ and eval() dont affect
     {
         /* PUT TEST CODE HERE */
         if (i % 4 == 0) {
@@ -60,11 +61,10 @@ int main(int argc, char** argv)
             uut->ad = i - 2; // Read the shit we just put in
             shouldAssert = 1;
         }
+        if (!uut->en) shouldAssert = 0;
 	    /* PUT TEST CODE HERE */
         uut->eval();
-        if (shouldAssert) {
-            assert(uut->q == testD - 1);
-        }
+        if (shouldAssert) assert(uut->q == testD - 1);
         uut->clk = !(uut->clk);
         if (tfp != NULL)
         {
@@ -72,6 +72,47 @@ int main(int argc, char** argv)
         }
         main_time++;            // Time passes...
     }
+
+    // write with enable false
+    uut->en = 0;
+    uut->we = 1;
+    uut->d = testD;
+
+    uut->eval();
+    uut->clk = !(uut->clk);
+    if (tfp != NULL)
+    {
+        tfp->dump (main_time);
+    }
+    main_time++;  
+
+    uut->eval();
+    uut->clk = !(uut->clk);
+    if (tfp != NULL)
+    {
+        tfp->dump (main_time);
+    }
+    main_time++;  
+
+    uut->en = 1;
+    uut->we = 0;
+
+    uut->eval();
+    uut->clk = !(uut->clk);
+    if (tfp != NULL)
+    {
+        tfp->dump (main_time);
+    }
+    main_time++;  
+
+    uut->eval();
+    uut->clk = !(uut->clk);
+    if (tfp != NULL)
+    {
+        tfp->dump (main_time);
+    }
+    main_time++;  
+    assert(uut->q == testD-1); // check write did not succeed, should have old val
     
     uut->final();               // Done simulating
 
