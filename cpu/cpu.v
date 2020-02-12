@@ -25,7 +25,6 @@ module cpu(
   assign debug_port6 = {4'b0, rn_bus};//8'h06;
   assign debug_port7 = {7'b0, nreset};//{4'b0, cpsr_bus[31:28]};//8'h07;
 
-  // my shit
   // BIG ENDIAN
   wire dummy;
   assign dummy = 1'b0;
@@ -35,10 +34,11 @@ module cpu(
   wire [`FULLW-1 : 0] data_bus, data_addr_bus;
 
   wire [`FULLW-1 : 0] cpsr_bus;
-  wire should_set_cpsr;
+  wire [`FLAGSW-1 : 0] should_set_cpsr;
 
   wire [`FULLW-1 : 0] r1_out, r2_out, reg_wd, bv;
   wire [`REGAW-1 : 0] rd_bus, rn_bus, reg_wa;
+
   wire reg_we;
   wire ib, bl;
 
@@ -47,7 +47,7 @@ module cpu(
   wire ispb_q;
 
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
-  //ram data_mem(.d(data_addr_bus), .ad(), .we(), .q(), .clk(clk));
+  ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
 
   //register cpsr(.we(should_set_cpsr), .d({32{dummy}}), .q(cpsr_bus), .clk(clk));
 

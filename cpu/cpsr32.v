@@ -12,12 +12,14 @@ module cpsr32
     wire [`FULLW-1 : 0] writein;
     dff mem (.d(writein), .q(out), .clk(clk));
     
+    //dont care about bit 0-27
     assign writein[`FLAGS_START-1:0] = out[`FLAGS_START-1:0];
+
     genvar index;
     for (index=0; index<`FLAGSW; index=index+1) begin
         assign writein[`FLAGS_START + index] = shouldsetcpsr[index] 
                                                 ? cpsrwd[index] 
-                                                : out[`FLAGS_START + index]; 
+                                                : out[`FLAGS_START + index];
     end
 
 endmodule
