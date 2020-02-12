@@ -44,6 +44,7 @@ int main(int argc, char** argv)
     // PUT INIT CODE HERE
     int testD = 0xDEADBEEF;
     uut->clk = 1;
+    int shouldAssert = 0;
     for (int i = 0; i < 17; ++i) //gotta add +1 for the last eval, *2 just to make sure order of sel++ and eval() dont affect
     {
         /* PUT TEST CODE HERE */
@@ -52,12 +53,18 @@ int main(int argc, char** argv)
             uut->d = testD;
             uut->ad = i;
             testD++;
+            shouldAssert = 0;
         } else if (i % 4 == 2) {
             uut->we = false;
+            uut->d = 0;
             uut->ad = i - 2; // Read the shit we just put in
+            shouldAssert = 1;
         }
 	    /* PUT TEST CODE HERE */
         uut->eval();
+        if (shouldAssert) {
+            assert(uut->q == testD - 1);
+        }
         uut->clk = !(uut->clk);
         if (tfp != NULL)
         {
