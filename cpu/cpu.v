@@ -49,11 +49,16 @@ module cpu(
 
   wire ispb_q;
 
-  ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
+  wire [`PHASES-1 : 0] curr_phase;
+  phaser #(.PHASES(`PHASES)) phaser
+    (.out(curr_phase), .clk(clk), .reset(`IS_SIM ? 1'b0 : ~nreset));
+
+  ram instr_mem(.d({32{dummy}}),
+    .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .en(dummy1), .clk(clk));
   //ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
 
-  cpsr32 cpsr(.should_set_cpsr(should_set_cpsr),
-    .cpsrwd(alu_flags_write), .q(cpsr_bus), .clk(clk));
+  cpsr32 cpsr(.shouldsetcpsr(should_set_cpsr),
+    .cpsrwd(alu_flags_write), .out(cpsr_bus), .clk(clk));
 
   dff #(.WIDTH(1)) ispb(.d(ib), .q(ispb_q), .clk(clk));
 
@@ -64,7 +69,8 @@ module cpu(
   assign isreg_write = reg_we & (reg_wa != `PC_IND);
 
   pc32 pc (.ib(ib), .bv(bv), .we(ispc_write), .wd(reg_wd),
-    .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset), .en(dummy1),
+    .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset),
+    .en(curr_phase == 0),
     .clk(clk)
   );
 

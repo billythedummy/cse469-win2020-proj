@@ -22,5 +22,6 @@
 `define N_i 3
 // Reg
 `define PC_IND 15
-
+// Phases just for lab 2
+`define PHASES 5
 `endif
