@@ -63,9 +63,11 @@ int main(int argc, char** argv)
     uut->clk = 0;
     
     // check in1 writing and reading
+    int write_data;
+    write_data = 0xCAFEF00D;
     uut->we = 1;
     uut->wa = 6;
-    uut->wd = 0xCAFEF00D;
+    uut->wd = write_data;
     fullClock(uut, tfp, &main_time);
 
     // check if CAFEF00D is stored
@@ -75,11 +77,14 @@ int main(int argc, char** argv)
     uut->wa = 0;
     uut->wd = 0;
     fullClock(uut, tfp, &main_time);
+    assert(uut->out1 == write_data);
+    assert(uut->out2 == 0); // havent written anything to addr 9 yet, should be 0
 
     // check in2 writing and reading
+    write_data = 0xDEADBEEF;
     uut->we = 1;
     uut->wa = 9;
-    uut->wd = 0xDEADBEEF;
+    uut->wd = write_data;
     fullClock(uut, tfp, &main_time);
 
     // DEADBEEF should be at out2, CAFEF00D should be at out1
@@ -87,35 +92,7 @@ int main(int argc, char** argv)
     uut->wa = 0;
     uut->wd = 0;
     fullClock(uut, tfp, &main_time);
-
-    // Check branching
-    uut->ib = 1;
-    uut->bv = 16;
-    fullClock(uut, tfp, &main_time);
-
-    uut->ib = 0;
-    fullClock(uut, tfp, &main_time);
-
-    // Negative branch value
-    uut->ib = 1;
-    uut->bv = -8;
-    fullClock(uut, tfp, &main_time);
-
-    uut->ib = 0;
-    fullClock(uut, tfp, &main_time);
-
-    // Overwrite PC
-    uut->we = 1;
-    uut->wa = 15;
-    uut->wd = 0xFACEBADE;
-    fullClock(uut, tfp, &main_time);
-
-    uut->ib = 0;
-    uut->we = 0;
-    uut->wd = 0x69;
-    uut->wa = 0;
-    fullClock(uut, tfp, &main_time);
-
+    assert(uut->out2 == write_data);
 
     // to see the rest
     fullClock(uut, tfp, &main_time);

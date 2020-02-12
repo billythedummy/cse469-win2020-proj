@@ -5,7 +5,6 @@ module reg32
     (in1, in2,
     we, wd, wa,
     out1, out2,
-    ib, bv, bl, iaddrout, // PC lines
     reset, clk, en); 
     // input1, input2
     // write-enable, write-data (register write back), write-address
@@ -15,26 +14,19 @@ module reg32
 
     // might need a b line for ldrb
 
-    // default last addr (r15 in this case) is PC
-
     input [ADDR_WIDTH-1:0] in1, in2, wa;
-    input we, ib, clk, bl, reset, en;
-    input [`FULLW - 1:0] wd, bv;
+    input we, clk, reset, en;
+    input [`FULLW - 1:0] wd;
 
-    output reg [`FULLW - 1:0] out1, out2, iaddrout;
+    output reg [`FULLW - 1:0] out1, out2;
 
-    reg [`WIDTH-1:0] mem [0 : ( (1 << ADDR_WIDTH) -1 )*`WORD-1]; // not including pc (own module)
-    wire ispc; // is write for program counter
-    assign ispc = we & (wa == 15); 
-    pc32 pc (.ib(ib), .bv(bv), .we(ispc), .wd(wd), .iaddrout(iaddrout), .clk(clk), .reset(reset));
-    wire wemain;
-    assign wemain = we & !ispc;
+    reg [`WIDTH-1:0] mem [0 : ( (1 << ADDR_WIDTH) - 1 )*`WORD-1]; // not including pc (own module)
 
     integer index;
     always @(posedge clk) begin
         // no reset for other registers..
         // write
-        if (wemain) begin
+        if (we) begin
             for (index=0; index<`WORD; index=index+1) begin
                 mem[ {28'b0, wa}*`WORD + index] <= wd[(`WORD-index-1)*`WIDTH +: `WIDTH];
             end

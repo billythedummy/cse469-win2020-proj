@@ -29,6 +29,9 @@ module cpu(
   wire dummy;
   assign dummy = 1'b0;
 
+  wire dummy1;
+  assign dummy1 = 1'b1;
+
   wire [`FULLW-1 : 0] instr_bus, instr_addr_bus;
 
   wire [`FULLW-1 : 0] data_bus, data_addr_bus;
@@ -47,11 +50,22 @@ module cpu(
   wire ispb_q;
 
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
-  ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
+  //ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
 
   //register cpsr(.we(should_set_cpsr), .d({32{dummy}}), .q(cpsr_bus), .clk(clk));
 
   dff #(.WIDTH(1)) ispb(.d(ib), .q(ispb_q), .clk(clk));
+
+  wire ispc_write;
+  assign ispc_write = reg_we & (reg_wa == `PC_IND);
+
+  wire isreg_write;
+  assign isreg_write = reg_we & (reg_wa != `PC_IND);
+
+  pc32 pc (.ib(ib), .bv(bv), .we(ispc_write), .wd(reg_wd),
+    .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset), .en(dummy1),
+    .clk(clk)
+  );
 
   idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]), .ispb(ispb_q),
     .alu_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
@@ -59,10 +73,8 @@ module cpu(
     .ib(ib), .bv(bv), .bl(bl));
   
   reg32 registers(.in1(rn_bus), .in2(rd_bus),
-    .we(reg_we), .wd(reg_wd), .wa(reg_wa),
+    .we(isreg_write), .wd(reg_wd), .wa(reg_wa),
     .out1(r1_out), .out2(r2_out),
-    .ib(ib), .bv(bv), .bl(bl),
-    .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset), // set reset to 0 for simulations
     .clk(clk));
   
   // Note: cant do this in synthesis  

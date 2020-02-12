@@ -20,5 +20,7 @@
 `define C_i 1
 `define Z_i 2
 `define N_i 3
+// Reg
+`define PC_IND 15
 
 `endif
