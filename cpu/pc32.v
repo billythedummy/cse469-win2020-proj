@@ -30,7 +30,8 @@ module pc32
             end
             iaddrout <= ctr;
         end
-        else iaddrout <= 0;
+        // emit last value if not enabled
+        else iaddrout <= iaddrout;
     end
 
 endmodule

@@ -97,15 +97,18 @@ int main(int argc, char** argv)
     uut->en = 0;
     int ctr_old = uut->iaddrout;
     fullClock(uut, tfp, &main_time);
-    assert(uut->iaddrout == 0);
+    fullClock(uut, tfp, &main_time);
+    assert(uut->iaddrout == ctr_old);
 
     uut->en = 1;
     fullClock(uut, tfp, &main_time);
     assert(uut->iaddrout == ctr_old + 4);
 
     // to see the rest
+    ctr_old = uut->iaddrout;
     fullClock(uut, tfp, &main_time);
     fullClock(uut, tfp, &main_time);
+    assert(uut->iaddrout == ctr_old + 8);
     
     uut->final();               // Done simulating
 

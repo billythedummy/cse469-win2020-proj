@@ -37,7 +37,7 @@ module cpu(
   wire [`FULLW-1 : 0] data_bus, data_addr_bus;
 
   wire [`FULLW-1 : 0] cpsr_bus;
-  wire [`FLAGSW-1 : 0] should_set_cpsr;
+  wire [`FLAGSW-1 : 0] should_set_cpsr, alu_flags_write;
 
   wire [`FULLW-1 : 0] r1_out, r2_out, reg_wd, bv;
   wire [`REGAW-1 : 0] rd_bus, rn_bus, reg_wa;
@@ -52,7 +52,8 @@ module cpu(
   ram instr_mem(.d({32{dummy}}), .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
   //ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
 
-  //register cpsr(.we(should_set_cpsr), .d({32{dummy}}), .q(cpsr_bus), .clk(clk));
+  cpsr32 cpsr(.should_set_cpsr(should_set_cpsr),
+    .cpsrwd(alu_flags_write), .q(cpsr_bus), .clk(clk));
 
   dff #(.WIDTH(1)) ispb(.d(ib), .q(ispb_q), .clk(clk));
 
