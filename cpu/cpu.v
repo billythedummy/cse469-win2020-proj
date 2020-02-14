@@ -57,7 +57,7 @@ module cpu(
     .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
   //ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
 
-  cpsr32 cpsr(.shouldsetcpsr(should_set_cpsr),
+  cpsr32 cpsr(.should_set_cpsr(should_set_cpsr),
     .cpsrwd(alu_flags_write), .out(cpsr_bus), .clk(clk));
 
   dff #(.WIDTH(1)) ispb(.d(ib), .q(ispb_q), .clk(clk));

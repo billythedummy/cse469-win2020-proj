@@ -1,124 +1,79 @@
 `include "defines.v"
 
 module idec32  //instruction decoder
-    (iin, cpsrin, ispb,
+    (i_in, cpsr_in, ispb_in,
     alu_out,
     rn_out, rd_out, rm_out,
-    bypass_rm,
-    should_bypass_rm,
-    cpsrs_out, reg_we, mem_we,
-    shiftcode, shiftby,
-    ib, bv, bl);
+    bypass_rm_out, should_bypass_rm_out,
+    should_set_cpsr_out,
+    reg_we_out, mem_we_out,
+    shiftcode_out, shiftby_out,
+    ib_out, bv_out, bl_out);
     // instruction in, CPSR in, is previous instruction branch in
     // ALU out, Rn out, Rd out, 
     // should set CPSR out, register write enable, memory write enable,
     // instruction branch out, branch value out, branch should link (store in r14)
     // clock
 
-    input [`FULLW-1 : 0] iin;
-    input ispb;
-    input [`FLAGSW-1 : 0] cpsrin;
+    // rd goes to register write
+    // rm goes to shifter
+    // rn unaffected
+
+    input [`FULLW-1 : 0] i_in;
+    input [`FLAGSW-1 : 0] cpsr_in;
+    input ispb_in;
+
+    // dont really care if comb logic goes through, state doesnt change
+    // long as registers dont change:
+    // reg_we_out, mem_we_out, ib_out, should_set_cpsr_out
+
     output reg [`ALUAW-1 : 0] alu_out;
     output reg [`REGAW-1 : 0] rn_out, rd_out, rm_out;
-    output reg cpsrs_out, reg_we, mem_we, ib, bl, should_bypass_Rm;
-    output reg [`FULLW-1 : 0] bv, bypass_Rm;
-    output reg [`WIDTH-1 : 0] shiftby;
-    output reg [`SHIFTCODEW-1 : 0] shiftcode;
+    output reg reg_we_out, mem_we_out, bl_out;
+    output reg ib_out, should_bypass_rm_out;
+    output reg [`FLAGSW-1 : 0] should_set_cpsr_out;
+    output reg [`FULLW-1 : 0] bv_out, bypass_rm_out;
+    output reg [`WIDTH-1 : 0] shiftby_out;
+    output reg [`SHIFTCODEW-1 : 0] shiftcode_out;
 
     wire [`OP_TYPE_W-1 : 0] optype;
     wire shouldexec;
-    assign optype = iin[27:25];
+    assign optype = i_in[`OP_TYPE_START +: `OP_TYPE_W];
+    wire [`FLAGSW-1 : 0] should_set_cpsr;
+    wire is_load;
+    assign is_load = i_in[`LD_OR_STR_i];
+    wire shouldwritereg;
+    assign shouldwritereg = (optype[2:1] == `OP_DATA) 
+        | ((optype[2:1] == `OP_LDSTR) & is_load);
+    wire [`ALUAW-1 : 0] rm;
 
-    condchecker check (.codein(iin[31:28]), .cpsrin(cpsrin), .shouldexecout(shouldexec));
+    condchecker check (.codein(i_in[`FLAGS_START +: `FLAGSW]), .cpsrin(cpsr_in),
+        .shouldexecout(shouldexec));
+
+    shifterdec sdec (.optype(optype), .in(i_in[0+:`SHIFTER_OPERAND_W]),
+        .rm(rm), .bypass_rm(bypass_rm_out),
+        .should_bypass_rm(should_bypass_rm_out),
+        .shiftcode(shiftcode_out), .shiftby(shiftby_out));
+
+    aludec adec (.optype(i_in[`LDSTR_OR_DATA_i]),
+        .in(i_in[`CONTROL_START +: `CONTROLW]),
+        .alu_opcode(alu_out), .should_set_cpsr(should_set_cpsr));
 
     always @(*) begin
-        // no-op if not passed
-        // TO-DO: SHOULD MODIFY FLAGS
-        alu_out = 4'b0;
-        rn_out = 4'b0;
-        rd_out = 4'b0;
-        rm_out = 4'b0;
-        cpsrs_out = 0;
-        reg_we = 0;
-        mem_we = 0;
-        ib = 0;
-        bl = 0;
-        should_bypass_Rm = 0;
-        bv = 32'b0;
-        shiftby = 8'b0;
-        bypass_Rm = 32'b0;
-        // cond code passed
-        if (shouldexec && iin != 32'b0 && !ispb) begin
-            case (optype)
-                `OP_DATA_SHIFT: begin // logical/arithmetic, modifies c flags
-                    // I bit is CONTROL BIT see manual
-                    // TO-DO: 12 bit shifter handling
-                    alu_out = iin[24:21];
-                    rn_out = iin[19:16];
-                    rd_out = iin[15:12];
-                    cpsrs_out = iin[20];
-                    reg_we = 1;
-                    mem_we = 0;
-                    ib = 0;
-                    bl = 0;
-                    bv = 32'b0;
-                end
-                `OP_DATA_ROR: begin // logical/arithmetic, rotate immediate, shouldnt modify c flags if rotate imm == 0
-                    // shifter inputs
-                    should_bypass_Rm = 1;
-                    shiftcode = `ROR;
-                    shiftby = {4'b0, iin[11:8]} << 1; // *2
-                    bypass_Rm = {24'b0, iin[7:0]};
-                    // alu inputs
-                    alu_out = iin[24:21];
-                    // regfile inputs
-                    rn_out = iin[19:16];
-                    rd_out = iin[15:12];
-                    // others
-                    cpsrs_out = iin[20];
-                    reg_we = 1;
-                    mem_we = 0;
-                    ib = 0;
-                    bl = 0;
-                    bv = 32'b0;
-                end
-                `OP_LDSTR: begin // load/store
-                    // TO-DO: 12 bit shifter handling
-                    alu_out = iin[24:21]; // THIS SHOULD BE PASSTHROUGH CODE FOR ALU
-                    rn_out = iin[19:16];
-                    rd_out = iin[15:12];
-                    cpsrs_out = 0; // LOAD STORE DOES NOT CHANGE CPSR FLAGS: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/BABFGBDD.html
-                    reg_we = iin[20]; // include or post increment?
-                    mem_we = ~iin[20];
-                    ib = 0;
-                    bl = 0;
-                    bv = 32'b0;
-                end
-                `OP_BRANCH: begin // branch
-                    // This takes 2 cycles so when this is done, PC = PC + 8
-                    alu_out = 4'b0;
-                    rn_out = 4'b0;
-                    rd_out = 4'b0;
-                    cpsrs_out = 0;
-                    reg_we = 0; // might need to change this
-                    mem_we = 0;
-                    ib = 1;
-                    bl = iin[24];
-                    bv = {{6{iin[23]}}, iin[23:0], 2'b0}; // sign extend and << 2
-                end
-                default: begin // not sure/ unsupported, just no-op
-                    alu_out = 4'b0;
-                    rn_out = 4'b0;
-                    rd_out = 4'b0;
-                    cpsrs_out = 0;
-                    reg_we = 0;
-                    mem_we = 0;
-                    ib = 0;
-                    bl = 0;
-                    bv = 32'b0;
-                end
-            endcase
-        end
+        reg_we_out = shouldexec & shouldwritereg; 
+        mem_we_out = shouldexec & ((optype[2:1] == `OP_LDSTR) & (~is_load)); // L = 0 means store
+        ib_out = shouldexec & (optype == `OP_BRANCH); 
+        should_set_cpsr_out = shouldexec ? {`FLAGSW{1'b0}} : should_set_cpsr;
+        // rd and rn
+        rn_out = i_in[`RN_START_i +: `REGAW];
+        rd_out = i_in[`RD_START_i +: `REGAW];
+        rm_out = ((optype[2:1] == `OP_LDSTR) & (~is_load)) // if store, rm=rd since rd is data to be written
+            ? rd_out
+            : rm;
+        // branching
+        bl_out = i_in[`BL_i];
+        bv_out = {{(`FULLW-`BRANCH_SHIFT-`BRANCHIMM_W){i_in[`BRANCHIMM_W-1]}},
+            i_in[0+:`BRANCHIMM_W], {(`BRANCH_SHIFT){1'b0}} }; // sign extend and << 2
     end
 
 

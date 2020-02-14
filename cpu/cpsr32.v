@@ -1,12 +1,12 @@
 `include "defines.v"
 
 module cpsr32
-    (shouldsetcpsr,
+    (should_set_cpsr,
     cpsrwd,
     out, clk);
     
     input wire clk;
-    input wire [`FLAGSW-1:0] shouldsetcpsr, cpsrwd;
+    input wire [`FLAGSW-1:0] should_set_cpsr, cpsrwd;
     output wire [`FULLW-1 : 0] out;
 
     wire [`FULLW-1 : 0] writein;
@@ -17,7 +17,7 @@ module cpsr32
 
     genvar index;
     for (index=0; index<`FLAGSW; index=index+1) begin
-        assign writein[`FLAGS_START + index] = shouldsetcpsr[index] 
+        assign writein[`FLAGS_START + index] = should_set_cpsr[index] 
                                                 ? cpsrwd[index] 
                                                 : out[`FLAGS_START + index];
     end

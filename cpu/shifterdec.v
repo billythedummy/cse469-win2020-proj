@@ -43,7 +43,7 @@ module shifterdec
                 shiftcode = in[`SHIFTCODE_START +: `SHIFTCODEW];
                 shiftby = {{(`WIDTH-`SHIFTIMM_W){1'b0}}, in[`SHIFTIMM_START +: `SHIFTIMM_W]};
             end
-            default begin 
+            default: begin 
                 // branch, dont care bec not handled by ALU
                 rm = 0;
                 bypass_rm = 0;

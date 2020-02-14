@@ -2,18 +2,19 @@
 `define _defines_v_
 
 `define IS_SIM 1
+
 `define WORD 4 // how many bytes in word
 `define WIDTH 8 // how many bit in byte
 `define FULLW (`WORD * `WIDTH) // how many bits in word
 `define REGAW 4 // register address width
-`define FLAGSW 4 // how many flags
-`define SHIFTER_OPERAND_W 12
 
 // 3 bit optype codes (bits 25-27)
 `define OP_TYPE_W 3 
 `define OP_TYPE_START 25 // start index of OP_TYPE
+`define OP_DATA 2'b00
 `define OP_DATA_SHIFT 3'b000
 `define OP_DATA_ROR 3'b001
+`define OP_LDSTR 2'b01
 `define OP_LDSTR_IMM 3'b010
 `define OP_LDSTR_REG 3'b011
 `define OP_BRANCH 3'b101
@@ -39,6 +40,7 @@
 `define MVN 4'b1111 // Rd  NOT shifter
 
 // shifter codes
+`define SHIFTER_OPERAND_W 12
 `define SHIFTCODEW 2 // how many bits to encode barrel shifter code
 `define SHIFTCODE_START 5 // start index of shift code
 `define SHIFTIMM_START 7 // start index of shift immediate
@@ -50,8 +52,24 @@
 `define ASR 2'b10 // code for ARITHMETIC SHIFT RIGHT
 `define ROR 2'b11 // code for ROTATE RIGHT, RRX is just checking if immed is 0
 
+// rd rn control bits
+`define RD_START_i 12
+`define RN_START_i 16
+
+// other control bits (20-24)
+`define CONTROL_START 20
+`define CONTROLW 5
+`define LDSTR_OR_DATA_i 26
+`define LD_OR_STR_i 20
+
+// Branch instruction stuff
+`define BRANCHIMM_W 24
+`define BL_i 24
+`define BRANCH_SHIFT 2
+
 // ZCNV flag indices
 `define FLAGS_START 28
+`define FLAGSW 4 // how many flags
 `define V_i 0
 `define C_i 1
 `define Z_i 2
