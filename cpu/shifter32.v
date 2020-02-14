@@ -2,13 +2,13 @@
 
 module shifter32
     (shiftby, shiftin, shiftcode,
-    cflag, shouldextend,
+    cflag,
     out, carryout);
     
     input signed [`FULLW-1 : 0] shiftin;
     input [`WIDTH-1 : 0] shiftby;
     input [`SHIFTCODEW-1 : 0] shiftcode;
-    input cflag, shouldextend;
+    input cflag;
     output reg [`FULLW-1 : 0] out;
     output reg carryout;
 
@@ -49,15 +49,9 @@ module shifter32
                     out = (shiftin >> shiftby) | (shiftin << (`FULLW-shiftby));
                     carryout = out[`FULLW-1];
                 end
-                else begin // if shiftby == 0 then its either RRX or PASS
-                    if (shouldextend) begin //  RRX
-                        out = (cflag << (`FULLW-1)) | (shiftin >> 1);
-                        carryout = shiftin[0];    
-                    end
-                    else begin // PASS
-                        out = shiftin;
-                        carryout = 0; // dont care
-                    end
+                else begin // shiftby 0 in ROR case is RRX
+                    out = (cflag << (`FULLW-1)) | (shiftin >> 1);
+                    carryout = shiftin[0]; 
                 end
             end
         endcase

@@ -12,8 +12,8 @@ localparam ALWAYS = 3'b111;
 module condchecker
     (codein, cpsrin, shouldexecout);
 
-    // CPSR: 0 - N, 1 - Z, 2 - C, 3 - V
-    input [3:0] codein, cpsrin;
+    // CPSR: 0 - V, 1 - C, 2 - Z, 3 - N
+    input [`FLAGSW-1:0] codein, cpsrin;
     output reg shouldexecout;
 
     wire Ze, C, N, V, sel;

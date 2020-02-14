@@ -1,17 +1,11 @@
 `include "defines.v"
 
-localparam OP_TYPE_W = 3; 
-localparam OP_LOGICAL_SHIFT = 3'b000;
-localparam OP_LOGICAL_ROR = 3'b001;
-localparam OP_LDSTR = 3'b010;
-localparam OP_BRANCH = 3'b101;
-
 module idec32  //instruction decoder
     (iin, cpsrin, ispb,
     alu_out,
     rn_out, rd_out, rm_out,
-    bypass_Rm,
-    should_bypass_Rm,
+    bypass_rm,
+    should_bypass_rm,
     cpsrs_out, reg_we, mem_we,
     shiftcode, shiftby,
     ib, bv, bl);
@@ -31,7 +25,7 @@ module idec32  //instruction decoder
     output reg [`WIDTH-1 : 0] shiftby;
     output reg [`SHIFTCODEW-1 : 0] shiftcode;
 
-    wire [OP_TYPE_W-1 : 0] optype;
+    wire [`OP_TYPE_W-1 : 0] optype;
     wire shouldexec;
     assign optype = iin[27:25];
 
@@ -56,7 +50,7 @@ module idec32  //instruction decoder
         // cond code passed
         if (shouldexec && iin != 32'b0 && !ispb) begin
             case (optype)
-                OP_LOGICAL_SHIFT: begin // logical/arithmetic, modifies c flags
+                `OP_DATA_SHIFT: begin // logical/arithmetic, modifies c flags
                     // I bit is CONTROL BIT see manual
                     // TO-DO: 12 bit shifter handling
                     alu_out = iin[24:21];
@@ -69,7 +63,7 @@ module idec32  //instruction decoder
                     bl = 0;
                     bv = 32'b0;
                 end
-                OP_LOGICAL_ROR: begin // logical/arithmetic, rotate immediate, shouldnt modify c flags if rotate imm == 0
+                `OP_DATA_ROR: begin // logical/arithmetic, rotate immediate, shouldnt modify c flags if rotate imm == 0
                     // shifter inputs
                     should_bypass_Rm = 1;
                     shiftcode = `ROR;
@@ -88,7 +82,7 @@ module idec32  //instruction decoder
                     bl = 0;
                     bv = 32'b0;
                 end
-                OP_LDSTR: begin // load/store
+                `OP_LDSTR: begin // load/store
                     // TO-DO: 12 bit shifter handling
                     alu_out = iin[24:21]; // THIS SHOULD BE PASSTHROUGH CODE FOR ALU
                     rn_out = iin[19:16];
@@ -100,7 +94,7 @@ module idec32  //instruction decoder
                     bl = 0;
                     bv = 32'b0;
                 end
-                OP_BRANCH: begin // branch
+                `OP_BRANCH: begin // branch
                     // This takes 2 cycles so when this is done, PC = PC + 8
                     alu_out = 4'b0;
                     rn_out = 4'b0;

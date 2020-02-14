@@ -107,14 +107,13 @@ int main(int argc, char** argv)
 
     // test ROR
     uut->shiftcode = 0b11;
-    uut->shouldextend = 0;
     for (int i = 0; i < 32; ++i) {
         uut->shiftby = i;
         for (int j = -LIMIT; j < LIMIT; ++j) {
             uut->shiftin = j;
             uut->eval();
-            assert(uut->out == (ror(j, i)));
             if (i != 0) {
+                assert(uut->out == (ror(j, i)));
                 assert(uut->carryout == extractBit(uut->out, 31));
             }
             main_time++;
@@ -123,7 +122,6 @@ int main(int argc, char** argv)
 
     // test RRX
     uut->shiftcode = 0b11;
-    uut->shouldextend = 1;
     uut->shiftby = 0;
     for (int j = -LIMIT; j < LIMIT; ++j) {
         uut->shiftin = j;
