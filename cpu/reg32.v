@@ -5,17 +5,17 @@ module reg32
     (rn_a, rm_a,
     we, wd, wa,
     rd_out, rn_out, rm_out,
-    reset, clk); 
+    clk); 
     // input1, input2
     // write-enable, write-data (register write back), write-address
     // output1, output2,
     // isBranch, branchValue, branch should link, instruction out
-    // reset clock
+    // clock
 
     // might need a b line for ldrb
 
     input [ADDR_WIDTH-1:0] rn_a, rm_a, wa; //rd is write address
-    input we, clk, reset;
+    input we, clk;
     input [`FULLW - 1:0] wd;
 
     output reg [`FULLW - 1:0] rd_out, rn_out, rm_out;
@@ -24,7 +24,6 @@ module reg32
 
     integer index;
     always @(posedge clk) begin
-        // no reset for other registers..
         // write
         if (we) begin
             for (index=0; index<`WORD; index=index+1) begin

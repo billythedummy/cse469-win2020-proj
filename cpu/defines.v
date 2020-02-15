@@ -80,4 +80,9 @@
 
 // Phases just for lab 2
 `define PHASES 5
+`define FETCH_PHASE 0
+`define REG_PHASE 1
+`define EXE_PHASE 2
+`define MEM_PHASE 3
+`define WB_PHASE 4
 `endif

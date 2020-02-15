@@ -17,80 +17,137 @@ module cpu(
   assign led = 1'b1;
 
   // These are how you communicate back to the serial port debugger.
-  assign debug_port1 = instr_addr_bus[7:0];// 8'h01;
-  assign debug_port2 = instr_bus[7:0]; //8'h02;
-  assign debug_port3 = r1_out[7:0]; //8'h03;
-  assign debug_port4 = r2_out[7:0]; //8'h04;
-  assign debug_port5 = {4'b0, rd_bus};//8'h05;
-  assign debug_port6 = {4'b0, rn_bus};//8'h06;
-  assign debug_port7 = {7'b0, nreset};//{4'b0, cpsr_bus[31:28]};//8'h07;
+  assign debug_port1 = instr_addr_bus[7:0];
+  assign debug_port2 = instr_bus[7:0]; 
+  assign debug_port3 = {4'b0, rd_a_bus}; 
+  assign debug_port4 = {4'b0, rn_a_bus}; 
+  assign debug_port5 = rd_out_bus[7:0];
+  assign debug_port6 = rn_out_bus[7:0];
+  assign debug_port7 = {7'b0, nreset};
 
   // BIG ENDIAN
-  wire dummy;
-  assign dummy = 1'b0;
+  wire dummy0 = 1'b0;
+  wire dummy1 = 1'b1;
 
-  wire dummy1;
-  assign dummy1 = 1'b1;
-
-  // phase 0: Instr Fetch and decode
-  wire [`FULLW-1 : 0] instr_bus, instr_addr_bus;
-  wire [`FULLW-1 : 0] cpsr_bus;
-  wire [`FLAGSW-1 : 0] should_set_cpsr, alu_flags_write;
-  wire [`REGAW-1 : 0] rd_bus, rn_bus, reg_wa;
-
-  // phase 1: Register access and execute
-  wire [`FULLW-1 : 0] r1_out, r2_out, reg_wd, bv;
-  wire [`ALUAW-1 : 0] alu_opcode;
-  wire ib, bl;
-
-  // phase 2: mem access
-  wire data_we;
-  wire [`FULLW-1 : 0] data_bus, data_addr_bus;
-  wire ispb_q;
-
-  // phase 3: reg writeback
-  wire reg_we;
-
-  wire [`PHASES-1 : 0] curr_phase;
+  wire [$clog2(`PHASES)-1 : 0] curr_phase;
   phaser #(.PHASES(`PHASES)) phaser
     (.out(curr_phase), .clk(clk), .reset(`IS_SIM ? 1'b0 : ~nreset));
 
-  ram instr_mem(.d({32{dummy}}),
-    .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
-  ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
+  // pc
+  wire pc_we_final = reg_we & (reg_wa_bus == `PC_IND) & (curr_phase == `WB_PHASE);
 
-  cpsr32 cpsr(.should_set_cpsr(should_set_cpsr),
-    .cpsrwd(alu_flags_write), .out(cpsr_bus), .clk(clk));
-
-  dff #(.WIDTH(1)) ispb(.d(ib), .q(ispb_q), .clk(clk));
-
-  wire ispc_write;
-  assign ispc_write = reg_we & (reg_wa == `PC_IND);
-
-  wire isreg_write;
-  assign isreg_write = reg_we & (reg_wa != `PC_IND);
-
-  pc32 pc (.ib(ib), .bv(bv), .we(ispc_write), .wd(reg_wd),
+  pc32 pc (.ib(ib), .bv(bv_bus), .we(pc_we_final), .wd(reg_wd_bus),
     .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset),
+    .r_en(curr_phase == `FETCH_PHASE), .mod_en(curr_phase == `WB_PHASE),
     .clk(clk)
   );
 
-  idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]), .ispb(ispb_q),
-    .alu_opcode_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
-    .cpsrs_out(should_set_cpsr), .reg_we(reg_we), .mem_we(dummy),
-    .ib(ib), .bv(bv), .bl(bl));
-  
-  reg32 registers(.in1(rn_bus), .in2(rd_bus),
-    .we(isreg_write), .wd(reg_wd), .wa(reg_wa),
-    .out1(r1_out), .out2(r2_out),
+  // phase 0: Instr Fetch and decode
+  wire [`FULLW-1 : 0] instr_bus, instr_addr_bus;
+  wire [`FULLW-1 : 0] cpsr_bus, bypass_rm_d_bus, bypass_rm_q_bus;
+  wire [`FLAGSW-1 : 0] should_set_cpsr_d_bus, should_set_cpsr_q_bus;
+  wire [`REGAW-1 : 0] rd_a_bus, rn_a_bus, rm_a_bus, reg_wa_bus;
+  wire should_bypass_rm_d, should_bypass_rm_q;
+  wire should_bypass_data_0d, should_bypass_data_0q;
+  wire [`ALUAW-1 : 0] alu_opcode_bus;
+
+  ram instr_mem(.d({32{dummy0}}),
+    .ad(instr_addr_bus), .we(dummy0), .q(instr_bus), .clk(clk));
+
+  idec32 idec(.i_in(instr_bus), .cpsr_in(cpsr_bus[`FLAGS_START +: `FLAGSW]),
+    .alu_opcode_out(alu_opcode_bus),
+    .rm_a_out(rm_a_bus), .rn_a_out(rn_a_bus), .rd_a_out(reg_wa_bus), 
+    .bypass_rm_out(bypass_rm_d_bus), .should_bypass_rm_out(should_bypass_rm_d),
+    .should_set_cpsr_out(should_set_cpsr_d_bus),
+    .reg_we_out(reg_we), .mem_we_out(data_we),
+    .shiftcode_out(shiftcode_bus), .shiftby_out(shiftby_bus),
+    .should_bypass_data_out(should_bypass_data_0d),
+    .ib_out(ib), .bv_out(bv_bus), .bl_out(bl));
+
+  dff #(.WIDTH(1)) should_bypass_rm_dff (.d(should_bypass_rm_d), .q(should_bypass_rm_q), .clk(clk));
+
+  dff #(.WIDTH(`FULLW)) bypass_rm_dff (.d(bypass_rm_d_bus), .q(bypass_rm_q_bus), .clk(clk));
+
+  dff #(.WIDTH(`FLAGSW)) should_set_cpsr_dff (.d(should_set_cpsr_d_bus), .q(should_set_cpsr_q_bus), .clk(clk));
+
+  dff #(.WIDTH(1)) should_bypass_data_0_dff (.d(should_bypass_data_0d),
+    .q(should_bypass_data_0q), .clk(clk));
+
+  // phase 1: Register access
+  wire [`FULLW-1 : 0] rd_out_bus, rn_out_bus, rm_out_bus, bv_bus;
+  wire [`FULLW-1 : 0] shifter_in_bus, shifter_out_bus;
+  wire [`SHIFTCODEW-1 : 0] shiftcode_bus;
+  wire [`WIDTH-1 : 0] shiftby_bus;
+  wire shifter_carry_out;
+  wire [`FLAGSW-1 : 0] alu_flags_write;
+  wire [`FULLW-1 : 0] alu_out_d_bus, alu_out_q_bus;
+  wire [`FULLW-1 : 0] rd_out_q_bus;
+  wire ib, bl;
+  wire reg_we_final = reg_we & (reg_wa_bus != `PC_IND) & (curr_phase == `WB_PHASE);
+  wire should_bypass_data_1q;
+
+  reg32 registers(.rn_a(rn_a_bus), .rm_a(rm_a_bus),
+    .we(reg_we_final), .wd(reg_wd_bus), .wa(reg_wa_bus),
+    .rn_out(rn_out_bus), .rm_out(rm_out_bus), .rd_out(rd_out_bus),
     .clk(clk));
+
+  dff #(.WIDTH(1)) should_bypass_data_1_dff (.d(should_bypass_data_0q),
+    .q(should_bypass_data_1q), .clk(clk));
+
+  // phase 2: Exec
+  wire should_bypass_data_2q;
+
+  simplemux #(.WIDTH(`FULLW)) rm_bypass_mux (.in1(rm_out_bus), .in2(bypass_rm_q_bus),
+    .sel(should_bypass_rm_q),
+    .out(shifter_in_bus));
+  
+  shifter32 shifter (.shiftby(shiftby_bus), .shiftin(shifter_in_bus),
+    .shiftcode(shiftcode_bus),
+    .cflag(cpsr_bus[`FLAGS_START + `C_i]),
+    .out(shifter_out_bus), .carryout(shifter_carry_out));
+
+  alu32 alu (.codein(alu_opcode_bus), .Rn(rn_out_bus), .shifter(shifter_out_bus),
+    .shiftercarryout(shifter_carry_out), .out(alu_out_d_bus), .flagsout(alu_flags_write));
+  
+  cpsr32 cpsr(.should_set_cpsr(should_set_cpsr_q_bus),
+    .cpsrwd(alu_flags_write), .out(cpsr_bus), .clk(clk));
+
+  dff #(.WIDTH(`FULLW)) rd_dff (.d(rd_out_bus), .q(rd_out_q_bus), .clk(clk));
+
+  dff #(.WIDTH(`FULLW)) alu_out_dff (.d(alu_out_d_bus), .q(alu_out_q_bus), .clk(clk));
+
+  dff #(.WIDTH(1)) should_bypass_data_2_dff (.d(should_bypass_data_1q),
+    .q(should_bypass_data_2q), .clk(clk));
+
+  // phase 3: mem access
+  wire data_we;
+  wire [`FULLW-1 : 0] data_out_bus, data_addr_bus;
+  wire [`FULLW-1 : 0] alu_out_q2_bus;
+  wire should_bypass_data_3q;
+
+  ram data_mem(.d(rd_out_bus), .ad(data_addr_bus),
+    .we((curr_phase == `MEM_PHASE) & data_we),
+    .q(data_out_bus),
+    .clk(clk));
+
+  dff #(.WIDTH(`FULLW)) data_bypass_dff (.d(alu_out_q_bus), .q(alu_out_q2_bus), .clk(clk));
+
+  dff #(.WIDTH(1)) should_bypass_data_3_dff (.d(should_bypass_data_2q),
+    .q(should_bypass_data_3q), .clk(clk));
+
+  // phase 4: reg writeback
+  wire reg_we;
+  wire [`FULLW-1 : 0] reg_wd_bus;
+
+  simplemux #(.WIDTH(`FULLW)) data_bypass_mux (.in1(data_out_bus), .in2(alu_out_q2_bus),
+    .sel(should_bypass_data_3q),
+    .out(reg_wd_bus));
   
   // Note: cant do this in synthesis  
   initial begin
     if (`IS_SIM) begin
       $readmemh("../../testcode/hexcode_tests/lab1_instr.mem", instr_mem.mem);
       $readmemh("../../testcode/hexcode_tests/lab1_reg.mem", registers.mem);
-      $readmemh("../../testcode/hexcode_tests/lab1_cpsr.mem", cpsr.mem);
     end
   end
 endmodule

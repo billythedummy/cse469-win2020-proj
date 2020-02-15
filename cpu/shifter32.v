@@ -20,7 +20,7 @@ module shifter32
                     carryout = shiftin[`FULLW - shiftby];
                 end
                 else begin
-                    carryout = 0; //dont care
+                    carryout = cflag; 
                 end
             end
             `LSR: begin
@@ -50,7 +50,7 @@ module shifter32
                     carryout = out[`FULLW-1];
                 end
                 else begin // shiftby 0 in ROR case is RRX
-                    out = (cflag << (`FULLW-1)) | (shiftin >> 1);
+                    out = ({31'b0, cflag} << (`FULLW-1)) | (shiftin >> 1);
                     carryout = shiftin[0]; 
                 end
             end
