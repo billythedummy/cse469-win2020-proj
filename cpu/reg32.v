@@ -2,9 +2,9 @@
 
 module reg32
     #(parameter ADDR_WIDTH=4)
-    (in1, in2,
+    (rn_a, rm_a,
     we, wd, wa,
-    out1, out2,
+    rd_out, rn_out, rm_out,
     reset, clk); 
     // input1, input2
     // write-enable, write-data (register write back), write-address
@@ -14,11 +14,11 @@ module reg32
 
     // might need a b line for ldrb
 
-    input [ADDR_WIDTH-1:0] in1, in2, wa;
+    input [ADDR_WIDTH-1:0] rn_a, rm_a, wa; //rd is write address
     input we, clk, reset;
     input [`FULLW - 1:0] wd;
 
-    output reg [`FULLW - 1:0] out1, out2;
+    output reg [`FULLW - 1:0] rd_out, rn_out, rm_out;
 
     reg [`WIDTH-1:0] mem [0 : ( (1 << ADDR_WIDTH) - 1 )*`WORD-1]; // not including pc (own module)
 
@@ -31,12 +31,15 @@ module reg32
                 mem[ {28'b0, wa}*`WORD + index] <= wd[(`WORD-index-1)*`WIDTH +: `WIDTH];
             end
         end
-        // out
+        // out, always
         for (index=0; index<`WORD; index=index+1) begin
-            out2[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, in2}*`WORD + index];
+            rd_out[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, wa}*`WORD + index];
         end
         for (index=0; index<`WORD; index=index+1) begin
-            out1[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, in1}*`WORD + index];
+            rn_out[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, rn_a}*`WORD + index];
+        end
+        for (index=0; index<`WORD; index=index+1) begin
+            rm_out[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, rm_a}*`WORD + index];
         end
     end
 

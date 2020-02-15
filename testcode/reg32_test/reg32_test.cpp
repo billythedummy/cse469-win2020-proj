@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     // PUT INIT CODE HERE
     uut->clk = 0;
     
-    // check in1 writing and reading
+    // check rn_a writing and reading
     int write_data;
     write_data = 0xCAFEF00D;
     uut->we = 1;
@@ -71,31 +71,45 @@ int main(int argc, char** argv)
     fullClock(uut, tfp, &main_time);
 
     // check if CAFEF00D is stored
-    uut->in1 = uut->wa;
-    uut->in2 = 9;
+    uut->rn_a = uut->wa;
+    int wa = 14;
+    uut->rm_a = wa;
     uut->we = 0;
     uut->wa = 0;
     uut->wd = 0;
     fullClock(uut, tfp, &main_time);
-    assert(uut->out1 == write_data);
-    assert(uut->out2 == 0); // havent written anything to addr 9 yet, should be 0
+    assert(uut->rn_out == write_data);
+    assert(uut->rm_out == 0); // havent written anything to addr 9 yet, should be 0
 
-    // check in2 writing and reading
+    // check rm_a writing and reading
     write_data = 0xDEADBEEF;
     uut->we = 1;
-    uut->wa = 9;
+    uut->wa = wa;
     uut->wd = write_data;
     fullClock(uut, tfp, &main_time);
 
-    // DEADBEEF should be at out2, CAFEF00D should be at out1
+    // Check Rd out
+    uut->we = 0;
+    uut->wa = wa;
+    uut->wd = 0;
+    fullClock(uut, tfp, &main_time);
+    assert(uut->rd_out == write_data);
+
+    // DEADBEEF should be at rm_out, CAFEF00D should be at rn_out
     uut->we = 0;
     uut->wa = 0;
     uut->wd = 0;
     fullClock(uut, tfp, &main_time);
-    assert(uut->out2 == write_data);
+    assert(uut->rm_out == write_data);
+
+    // Check what Rd outputs when Rd is being written to at the same time
+    uut->we = 1;
+    uut->wa = wa;
+    uut->wd = 0xFACEBADE;
+    fullClock(uut, tfp, &main_time);
+    assert(uut->rd_out == write_data); // should be old data
 
     // to see the rest
-    fullClock(uut, tfp, &main_time);
     fullClock(uut, tfp, &main_time);
     
     uut->final();               // Done simulating
