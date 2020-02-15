@@ -6,3 +6,4 @@ test.arm
 obj_dir/
 .vscode/
 *.zip
+*.dump
