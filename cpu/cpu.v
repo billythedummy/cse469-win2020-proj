@@ -32,22 +32,24 @@ module cpu(
   wire dummy1;
   assign dummy1 = 1'b1;
 
+  // phase 0: Instr Fetch and decode
   wire [`FULLW-1 : 0] instr_bus, instr_addr_bus;
-
-  wire [`FULLW-1 : 0] data_bus, data_addr_bus;
-
   wire [`FULLW-1 : 0] cpsr_bus;
   wire [`FLAGSW-1 : 0] should_set_cpsr, alu_flags_write;
-
-  wire [`FULLW-1 : 0] r1_out, r2_out, reg_wd, bv;
   wire [`REGAW-1 : 0] rd_bus, rn_bus, reg_wa;
 
-  wire reg_we;
+  // phase 1: Register access and execute
+  wire [`FULLW-1 : 0] r1_out, r2_out, reg_wd, bv;
+  wire [`ALUAW-1 : 0] alu_opcode;
   wire ib, bl;
 
-  wire [`ALUAW-1 : 0] alu_opcode;
-
+  // phase 2: mem access
+  wire data_we;
+  wire [`FULLW-1 : 0] data_bus, data_addr_bus;
   wire ispb_q;
+
+  // phase 3: reg writeback
+  wire reg_we;
 
   wire [`PHASES-1 : 0] curr_phase;
   phaser #(.PHASES(`PHASES)) phaser
@@ -55,7 +57,7 @@ module cpu(
 
   ram instr_mem(.d({32{dummy}}),
     .ad(instr_addr_bus), .we(dummy), .q(instr_bus), .clk(clk));
-  //ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
+  ram data_mem(.d(data_addr_bus), .ad(data_addr_bus), .we(), .q(), .clk(clk));
 
   cpsr32 cpsr(.should_set_cpsr(should_set_cpsr),
     .cpsrwd(alu_flags_write), .out(cpsr_bus), .clk(clk));
@@ -74,7 +76,7 @@ module cpu(
   );
 
   idec32 idec(.iin(instr_bus), .cpsrin(cpsr_bus[31:28]), .ispb(ispb_q),
-    .alu_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
+    .alu_opcode_out(alu_opcode), .rn_out(rn_bus), .rd_out(rd_bus),
     .cpsrs_out(should_set_cpsr), .reg_we(reg_we), .mem_we(dummy),
     .ib(ib), .bv(bv), .bl(bl));
   

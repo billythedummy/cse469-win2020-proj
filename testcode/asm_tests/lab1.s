@@ -16,6 +16,7 @@
     EOR r0, r9
     BIC r1, r0
     ORR r2, r1
+    STR r4, [r3]
 .lul:
     MOV r2, r1
     BLE start

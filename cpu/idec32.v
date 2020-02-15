@@ -2,7 +2,7 @@
 
 module idec32  //instruction decoder
     (i_in, cpsr_in, ispb_in,
-    alu_out,
+    alu_opcode_out,
     rn_out, rd_out, rm_out,
     bypass_rm_out, should_bypass_rm_out,
     should_set_cpsr_out,
@@ -27,7 +27,7 @@ module idec32  //instruction decoder
     // long as registers dont change:
     // reg_we_out, mem_we_out, ib_out, should_set_cpsr_out
 
-    output reg [`ALUAW-1 : 0] alu_out;
+    output reg [`ALUAW-1 : 0] alu_opcode_out;
     output reg [`REGAW-1 : 0] rn_out, rd_out, rm_out;
     output reg reg_we_out, mem_we_out, bl_out;
     output reg ib_out, should_bypass_rm_out;
@@ -57,7 +57,7 @@ module idec32  //instruction decoder
 
     aludec adec (.optype(i_in[`LDSTR_OR_DATA_i]),
         .in(i_in[`CONTROL_START +: `CONTROLW]),
-        .alu_opcode(alu_out), .should_set_cpsr(should_set_cpsr));
+        .alu_opcode(alu_opcode_out), .should_set_cpsr(should_set_cpsr));
 
     always @(*) begin
         reg_we_out = shouldexec & shouldwritereg; 

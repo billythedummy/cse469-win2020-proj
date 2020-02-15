@@ -1,8 +1,8 @@
 00000000 <.start>:
-   0:	ea00000d 	b	3c <.lul>
-   4:	1a00000c 	bne	3c <.lul>
-   8:	ba00000b 	blt	3c <.lul>
-   c:	eb00000a 	bl	3c <.lul>
+   0:	ea00000e 	b	40 <.lul>
+   4:	1a00000d 	bne	40 <.lul>
+   8:	ba00000c 	blt	40 <.lul>
+   c:	eb00000b 	bl	40 <.lul>
   10:	e1a02001 	mov	r2, r1
   14:	e1e03002 	mvn	r3, r2
   18:	e5934000 	ldr	r4, [r3]
@@ -14,7 +14,8 @@
   30:	e0200009 	eor	r0, r0, r9
   34:	e1c11000 	bic	r1, r1, r0
   38:	e1822001 	orr	r2, r2, r1
+  3c:	e5834000 	str	r4, [r3]
 
-0000003c <.lul>:
-  3c:	e1a02001 	mov	r2, r1
-  40:	dafffffe 	ble	0 <start>
+00000040 <.lul>:
+  40:	e1a02001 	mov	r2, r1
+  44:	dafffffe 	ble	0 <start>
