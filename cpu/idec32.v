@@ -41,8 +41,10 @@ module idec32  //instruction decoder
     wire shouldexec;
     wire [`FLAGSW-1 : 0] should_set_cpsr;
     wire is_load = i_in[`LD_OR_STR_i];
+    wire is_bl = i_in[`BL_i] & (optype == `OP_BRANCH);
     wire shouldwritereg = (optype[2:1] == `OP_DATA) 
-        | ((optype[2:1] == `OP_LDSTR) & is_load);
+        | ((optype[2:1] == `OP_LDSTR) & is_load)
+        | is_bl;
 
     condchecker check (.codein(i_in[`FLAGS_START +: `FLAGSW]), .cpsrin(cpsr_in),
         .shouldexecout(shouldexec));
@@ -62,14 +64,15 @@ module idec32  //instruction decoder
     assign should_set_cpsr_out = shouldexec ? {`FLAGSW{1'b0}} : should_set_cpsr;
 
     // branching
-    assign bl_out = i_in[`BL_i];
+    assign bl_out = is_bl;
     assign ib_out = shouldexec & (optype == `OP_BRANCH);
     assign bv_out = {{(`FULLW-`BRANCH_SHIFT-`BRANCHIMM_W){i_in[`BRANCHIMM_W-1]}},
         i_in[0+:`BRANCHIMM_W], {(`BRANCH_SHIFT){1'b0}} }; // sign extend and << 2
     
     // register select
     assign rn_a_out = i_in[`RN_START_i +: `REGAW];
-    assign rd_a_out = i_in[`RD_START_i +: `REGAW];
+    // if bl, rd should be Link Register
+    assign rd_a_out = is_bl ? `LR_i : i_in[`RD_START_i +: `REGAW];
     // rm_a_out set by shifterdec
 
     // should get data from ALU or register

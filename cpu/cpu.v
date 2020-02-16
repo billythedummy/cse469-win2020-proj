@@ -34,7 +34,7 @@ module cpu(
     (.out(curr_phase), .clk(clk), .reset(`IS_SIM ? 1'b0 : ~nreset));
 
   // pc
-  wire pc_we_final = reg_we & (reg_wa_bus == `PC_IND) & (curr_phase == `WB_PHASE);
+  wire pc_we_final = reg_we & (reg_wa_bus == `PC_i) & (curr_phase == `WB_PHASE);
 
   pc32 pc (.ib(ib), .bv(bv_bus), .we(pc_we_final), .wd(reg_wd_bus),
     .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset),
@@ -48,7 +48,7 @@ module cpu(
   wire [`FLAGSW-1 : 0] should_set_cpsr_d_bus, should_set_cpsr_q_bus;
   wire [`REGAW-1 : 0] rd_a_bus, rn_a_bus, rm_a_bus, reg_wa_bus;
   wire should_bypass_rm_d, should_bypass_rm_q;
-  wire should_bypass_data_0d, should_bypass_data_0q;
+  wire should_bypass_data;
   wire [`ALUAW-1 : 0] alu_opcode_bus;
 
   ram instr_mem(.d({32{dummy0}}),
@@ -61,7 +61,7 @@ module cpu(
     .should_set_cpsr_out(should_set_cpsr_d_bus),
     .reg_we_out(reg_we), .mem_we_out(data_we),
     .shiftcode_out(shiftcode_bus), .shiftby_out(shiftby_bus),
-    .should_bypass_data_out(should_bypass_data_0d),
+    .should_bypass_data_out(should_bypass_data),
     .ib_out(ib), .bv_out(bv_bus), .bl_out(bl));
 
   dff #(.WIDTH(1)) should_bypass_rm_dff (.d(should_bypass_rm_d), .q(should_bypass_rm_q), .clk(clk));
@@ -70,9 +70,6 @@ module cpu(
 
   dff #(.WIDTH(`FLAGSW)) should_set_cpsr_dff (.d(should_set_cpsr_d_bus), .q(should_set_cpsr_q_bus), .clk(clk));
 
-  dff #(.WIDTH(1)) should_bypass_data_0_dff (.d(should_bypass_data_0d),
-    .q(should_bypass_data_0q), .clk(clk));
-
   // phase 1: Register access
   wire [`FULLW-1 : 0] rd_out_bus, rn_out_bus, rm_out_bus, bv_bus;
   wire [`FULLW-1 : 0] shifter_in_bus, shifter_out_bus;
@@ -80,22 +77,16 @@ module cpu(
   wire [`WIDTH-1 : 0] shiftby_bus;
   wire shifter_carry_out;
   wire [`FLAGSW-1 : 0] alu_flags_write;
-  wire [`FULLW-1 : 0] alu_out_d_bus, alu_out_q_bus;
-  wire [`FULLW-1 : 0] rd_out_q_bus;
   wire ib, bl;
-  wire reg_we_final = reg_we & (reg_wa_bus != `PC_IND) & (curr_phase == `WB_PHASE);
-  wire should_bypass_data_1q;
+  wire reg_we_final = reg_we & (reg_wa_bus != `PC_i) & (curr_phase == `WB_PHASE);
 
   reg32 registers(.rn_a(rn_a_bus), .rm_a(rm_a_bus),
     .we(reg_we_final), .wd(reg_wd_bus), .wa(reg_wa_bus),
     .rn_out(rn_out_bus), .rm_out(rm_out_bus), .rd_out(rd_out_bus),
     .clk(clk));
 
-  dff #(.WIDTH(1)) should_bypass_data_1_dff (.d(should_bypass_data_0q),
-    .q(should_bypass_data_1q), .clk(clk));
-
   // phase 2: Exec
-  wire should_bypass_data_2q;
+  wire [`FULLW-1 : 0] alu_out_d_bus, alu_out_q_bus;
 
   simplemux #(.WIDTH(`FULLW)) rm_bypass_mux (.in1(rm_out_bus), .in2(bypass_rm_q_bus),
     .sel(should_bypass_rm_q),
@@ -112,42 +103,33 @@ module cpu(
   cpsr32 cpsr(.should_set_cpsr(should_set_cpsr_q_bus),
     .cpsrwd(alu_flags_write), .out(cpsr_bus), .clk(clk));
 
-  dff #(.WIDTH(`FULLW)) rd_dff (.d(rd_out_bus), .q(rd_out_q_bus), .clk(clk));
-
   dff #(.WIDTH(`FULLW)) alu_out_dff (.d(alu_out_d_bus), .q(alu_out_q_bus), .clk(clk));
-
-  dff #(.WIDTH(1)) should_bypass_data_2_dff (.d(should_bypass_data_1q),
-    .q(should_bypass_data_2q), .clk(clk));
 
   // phase 3: mem access
   wire data_we;
-  wire [`FULLW-1 : 0] data_out_bus, data_addr_bus;
-  wire [`FULLW-1 : 0] alu_out_q2_bus;
-  wire should_bypass_data_3q;
+  wire [`FULLW-1 : 0] data_out_bus;
 
-  ram data_mem(.d(rd_out_bus), .ad(data_addr_bus),
+  ram data_mem(.d(rd_out_bus), .ad(alu_out_d_bus),
     .we((curr_phase == `MEM_PHASE) & data_we),
     .q(data_out_bus),
     .clk(clk));
 
-  dff #(.WIDTH(`FULLW)) data_bypass_dff (.d(alu_out_q_bus), .q(alu_out_q2_bus), .clk(clk));
-
-  dff #(.WIDTH(1)) should_bypass_data_3_dff (.d(should_bypass_data_2q),
-    .q(should_bypass_data_3q), .clk(clk));
-
   // phase 4: reg writeback
   wire reg_we;
-  wire [`FULLW-1 : 0] reg_wd_bus;
+  wire [`FULLW-1 : 0] mem_or_bypass_bus, reg_wd_bus;
 
-  simplemux #(.WIDTH(`FULLW)) data_bypass_mux (.in1(data_out_bus), .in2(alu_out_q2_bus),
-    .sel(should_bypass_data_3q),
+  simplemux #(.WIDTH(`FULLW)) data_bypass_mux (.in1(data_out_bus), .in2(alu_out_q_bus),
+    .sel(should_bypass_data),
+    .out(mem_or_bypass_bus));
+  // change data to curr instruction address + 4 if BL
+  simplemux #(.WIDTH(`FULLW)) bl_data_mux (.in1(mem_or_bypass_bus), .in2(instr_addr_bus + 4),
+    .sel(bl),
     .out(reg_wd_bus));
   
   // Note: cant do this in synthesis  
   initial begin
     if (`IS_SIM) begin
-      $readmemh("../../testcode/hexcode_tests/lab1_instr.mem", instr_mem.mem);
-      $readmemh("../../testcode/hexcode_tests/lab1_reg.mem", registers.mem);
+      $readmemh("../../testcode/hexcode_tests/lab2_instr.mem", instr_mem.mem);
     end
   end
 endmodule

@@ -76,7 +76,8 @@
 `define N_i 3
 
 // Reg
-`define PC_IND 15
+`define PC_i 15 // prog counter
+`define LR_i 14 // link register
 
 // Phases just for lab 2
 `define PHASES 5
