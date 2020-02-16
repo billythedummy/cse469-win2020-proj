@@ -53,17 +53,21 @@ int main(int argc, char** argv)
     uut->clk = 0;
     fullClock(uut, tfp, &main_time);
     uut->should_set_cpsr = 0b0010;
-    uut->cpsrwd =0b0010;
+    int cpsrwd = 0b0010;
+    uut->cpsrwd = cpsrwd;
     fullClock(uut, tfp, &main_time);
 
     uut->should_set_cpsr = 0b0000;
-    uut->cpsrwd =0b0000;
+    int cpsrwd2 = 0b0000;
+    uut->cpsrwd = cpsrwd2;
     fullClock(uut, tfp, &main_time);
+    assert( uut->out == (cpsrwd << 28) );
 
     uut->should_set_cpsr = 0b0010;
     fullClock(uut, tfp, &main_time);
 
     fullClock(uut, tfp, &main_time);
+    assert( uut->out == (cpsrwd2 << 28) );
     fullClock(uut, tfp, &main_time);
 
     uut->final();               // Done simulating

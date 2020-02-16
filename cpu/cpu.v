@@ -51,8 +51,8 @@ module cpu(
   wire should_bypass_data;
   wire [`ALUAW-1 : 0] alu_opcode_bus;
 
-  ram instr_mem(.d({32{dummy0}}),
-    .ad(instr_addr_bus), .we(dummy0), .q(instr_bus), .clk(clk));
+  ram #(.IS_INSTR(1)) instr_mem(.wa({`FULLW{dummy0}}), .we(dummy0), .wd({`FULLW{dummy0}}),
+    .ra(instr_addr_bus), .out(instr_bus), .clk(clk));
 
   idec32 idec(.i_in(instr_bus), .cpsr_in(cpsr_bus[`FLAGS_START +: `FLAGSW]),
     .alu_opcode_out(alu_opcode_bus),
@@ -109,9 +109,8 @@ module cpu(
   wire data_we;
   wire [`FULLW-1 : 0] data_out_bus;
 
-  ram data_mem(.d(rd_out_bus), .ad(alu_out_d_bus),
-    .we((curr_phase == `MEM_PHASE) & data_we),
-    .q(data_out_bus),
+  ram data_mem(.wd(rd_out_bus), .wa(alu_out_d_bus), .we((curr_phase == `MEM_PHASE) & data_we),
+    .ra(alu_out_d_bus), .out(data_out_bus),
     .clk(clk));
 
   // phase 4: reg writeback
@@ -121,6 +120,7 @@ module cpu(
   simplemux #(.WIDTH(`FULLW)) data_bypass_mux (.in1(data_out_bus), .in2(alu_out_q_bus),
     .sel(should_bypass_data),
     .out(mem_or_bypass_bus));
+    
   // change data to curr instruction address + 4 if BL
   simplemux #(.WIDTH(`FULLW)) bl_data_mux (.in1(mem_or_bypass_bus), .in2(instr_addr_bus + 4),
     .sel(bl),
