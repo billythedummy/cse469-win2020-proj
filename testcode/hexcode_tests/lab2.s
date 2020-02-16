@@ -16,4 +16,10 @@
 .overflowed:
     BICS r0, r0, r0
     STR r0, [r1]
-    BEQ .mainloop
+
+.carryloop:
+    LDR r2, [r1, #4]
+    SUBS r2, r2, #2147483648
+    STR r2, [r1, #4]
+    BCS .mainloop
+    B   .carryloop
