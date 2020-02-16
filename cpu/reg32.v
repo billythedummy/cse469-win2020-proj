@@ -20,28 +20,17 @@ module reg32
 
     output reg [`FULLW - 1:0] rd_out, rn_out, rm_out;
 
-    reg [`WIDTH-1:0] mem [0 : ( (1 << ADDR_WIDTH) - 1 )*`WORD-1]; // not including pc (own module)
+    reg [`FULLW-1:0] mem [0 : (1 << ADDR_WIDTH) - 1]; // not including pc (own module)
 
     integer index;
     always @(posedge clk) begin
+        // out, always
+        rd_out <= mem[wa];
+        rn_out <= mem[rn_a];
+        rm_out <= mem[rm_a];
         // write
         if (we) begin
-            for (index=0; index<`WORD; index=index+1) begin
-                mem[ {28'b0, wa}*`WORD + index] <= wd[(`WORD-index-1)*`WIDTH +: `WIDTH];
-            end
-        end
-        // out, always
-        for (index=0; index<`WORD; index=index+1) begin
-            rd_out[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, wa}*`WORD + index];
-        end
-        for (index=0; index<`WORD; index=index+1) begin
-            rn_out[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, rn_a}*`WORD + index];
-        end
-        for (index=0; index<`WORD; index=index+1) begin
-            rm_out[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[{28'b0, rm_a}*`WORD + index];
-        end
+            mem[wa] <= wd;
+        end;
     end
-
-    // LAB 1 REGISTERS
-    if (!`IS_SIM) initial $readmemh("testcode/hexcode_tests/lab1_reg.mem", mem);
 endmodule

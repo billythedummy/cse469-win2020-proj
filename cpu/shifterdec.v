@@ -22,12 +22,12 @@ module shifterdec
                 shiftcode = in[`SHIFTCODE_START +: `SHIFTCODEW];
                 shiftby = {{(`WIDTH-`SHIFTIMM_W){1'b0}}, in[`SHIFTIMM_START +: `SHIFTIMM_W]};
             end
-            `OP_DATA_ROR: begin
+            `OP_DATA_ROR: begin // ROR by immediate
                 rm = 0; // dont care
                 bypass_rm = {{(`FULLW-`WIDTH){1'b0}}, in[0+:`WIDTH]};
                 should_bypass_rm = 1;
                 shiftcode = (shiftby == 0) ? `LSL : `ROR; // dont shift if ROR 0. ROR 0 has special meaning of ROR 32
-                shiftby = {{(`WIDTH-`RORIMM_W){1'b0}}, in[`RORIMM_START +: `RORIMM_W]};
+                shiftby = {{(`WIDTH-`RORIMM_W-1){1'b0}}, in[`RORIMM_START +: `RORIMM_W], 1'b0}; // multiply by 2
             end
             `OP_LDSTR_IMM: begin
                 rm = 0; // dont care

@@ -20,9 +20,9 @@ module cpu(
   assign debug_port1 = instr_addr_bus[7:0];
   assign debug_port2 = instr_bus[7:0]; 
   assign debug_port3 = {4'b0, rd_a_bus}; 
-  assign debug_port4 = {4'b0, rn_a_bus}; 
-  assign debug_port5 = rd_out_bus[7:0];
-  assign debug_port6 = rn_out_bus[7:0];
+  assign debug_port4 = rd_out_bus[7:0]; 
+  assign debug_port5 = alu_out_d_bus[7:0];
+  assign debug_port6 = reg_wd_bus[7:0];
   assign debug_port7 = {7'b0, nreset};
 
   // BIG ENDIAN
@@ -45,7 +45,7 @@ module cpu(
   // phase 0: Instr Fetch and decode
   wire [`FULLW-1 : 0] instr_bus, instr_addr_bus;
   wire [`FULLW-1 : 0] cpsr_bus, bypass_rm_d_bus, bypass_rm_q_bus;
-  wire [`FLAGSW-1 : 0] should_set_cpsr_d_bus, should_set_cpsr_q_bus;
+  wire [`FLAGSW-1 : 0] should_set_cpsr_bus;
   wire [`REGAW-1 : 0] rd_a_bus, rn_a_bus, rm_a_bus, reg_wa_bus;
   wire should_bypass_rm_d, should_bypass_rm_q;
   wire should_bypass_data;
@@ -58,7 +58,7 @@ module cpu(
     .alu_opcode_out(alu_opcode_bus),
     .rm_a_out(rm_a_bus), .rn_a_out(rn_a_bus), .rd_a_out(reg_wa_bus), 
     .bypass_rm_out(bypass_rm_d_bus), .should_bypass_rm_out(should_bypass_rm_d),
-    .should_set_cpsr_out(should_set_cpsr_d_bus),
+    .should_set_cpsr_out(should_set_cpsr_bus),
     .reg_we_out(reg_we), .mem_we_out(data_we),
     .shiftcode_out(shiftcode_bus), .shiftby_out(shiftby_bus),
     .should_bypass_data_out(should_bypass_data),
@@ -67,8 +67,6 @@ module cpu(
   dff #(.WIDTH(1)) should_bypass_rm_dff (.d(should_bypass_rm_d), .q(should_bypass_rm_q), .clk(clk));
 
   dff #(.WIDTH(`FULLW)) bypass_rm_dff (.d(bypass_rm_d_bus), .q(bypass_rm_q_bus), .clk(clk));
-
-  dff #(.WIDTH(`FLAGSW)) should_set_cpsr_dff (.d(should_set_cpsr_d_bus), .q(should_set_cpsr_q_bus), .clk(clk));
 
   // phase 1: Register access
   wire [`FULLW-1 : 0] rd_out_bus, rn_out_bus, rm_out_bus, bv_bus;
@@ -100,7 +98,9 @@ module cpu(
   alu32 alu (.codein(alu_opcode_bus), .Rn(rn_out_bus), .shifter(shifter_out_bus),
     .shiftercarryout(shifter_carry_out), .out(alu_out_d_bus), .flagsout(alu_flags_write));
   
-  cpsr32 cpsr(.should_set_cpsr(should_set_cpsr_q_bus),
+  cpsr32 cpsr(.should_set_cpsr(
+      should_set_cpsr_bus & {`FLAGSW{curr_phase == `MEM_PHASE}}
+    ),
     .cpsrwd(alu_flags_write), .out(cpsr_bus), .clk(clk));
 
   dff #(.WIDTH(`FULLW)) alu_out_dff (.d(alu_out_d_bus), .q(alu_out_q_bus), .clk(clk));

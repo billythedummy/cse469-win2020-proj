@@ -2,7 +2,7 @@
 
 // RAM (watch addr_width, TinyFPGA only has 16KB BRAM available)
 module ram
-    #(parameter ADDR_WIDTH=8, IS_INSTR=0) // note ADDR_WIDTH is how many BYTES
+    #(parameter ADDR_WIDTH=8, IS_INSTR=0) // note ADDR_WIDTH is how many WORDS
     (wd, wa, we,
     ra, out,
     clk);
@@ -11,24 +11,23 @@ module ram
 
     // might need a b line for ldrb
 
-    input [`FULLW-1:0] wd, wa, ra; // one word at a time only, no support for bytes yet
-    input we, clk;
+    input reg [`FULLW-1:0] wd, wa, ra; // one word at a time only, no support for bytes yet
+    input wire we, clk;
     output reg [`FULLW-1:0] out;
 
-    reg [`WIDTH - 1:0] mem [0 : (1 << ADDR_WIDTH)-1];
+    reg [`FULLW - 1:0] mem [0 : (1 << ADDR_WIDTH)-1];
 
     integer index;
+
     always @(posedge clk) begin
+        // note: read must come before write for successful bram inference
+        // https://github.com/YosysHQ/yosys/issues/1087
+        // read (always)
+        out <= mem[ra >> $clog2(`WORD)];
         // write
         if (we) begin
             // shitty vanilla verilog cant do multi array assign
-            for (index=0; index<`WORD; index=index+1) begin
-                mem[wa + index] <= wd[(`WORD-index-1)*`WIDTH +: `WIDTH];
-            end
-        end
-        // read (always)
-        for (index=0; index<`WORD; index=index+1) begin
-            out[(`WORD-index-1)*`WIDTH +: `WIDTH] <= mem[ra + index];
+            mem[wa >> $clog2(`WORD)] <= wd;
         end
     end
 

@@ -9,5 +9,11 @@
     B   .mainloop
 
 .inc:
-    ADD r0, r0, #9
+    ADDS r0, r0, #1073741824
+    BVS .overflowed
     MOV pc, lr
+
+.overflowed:
+    BICS r0, r0, r0
+    STR r0, [r1]
+    BEQ .mainloop

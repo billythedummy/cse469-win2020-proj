@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
     // off we go, instructions loaded in from $readmemh
     uut->clk = 0;
-    for (int i = 0; i < 64; ++i) {
+    for (int i = 0; i < 256; ++i) {
         fullClock(uut, tfp, &main_time);
     }
 

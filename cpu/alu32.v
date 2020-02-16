@@ -34,7 +34,9 @@ module alu32
             `SUB: begin
                 out_exp = Rn_exp + ~shifter_exp + 1;
                 flagsout[`C_i] = Rn >= shifter; // invert Rn < shifter note: unsigned comparison
-                flagsout[`V_i] = (Rn[`FULLW-1] ^ shifter[`FULLW-1]) & ~(shifter[`FULLW-1] ^ out_exp[`FULLW-1]); // Rn and shifter have different signs, output has same sign as shifter 
+                flagsout[`V_i] = (Rn[`FULLW-1] ^ shifter[`FULLW-1]) 
+                    & ( ~(shifter[`FULLW-1] ^ out_exp[`FULLW-1]) 
+                        | (out_exp[`FULLW-1:0] == 0) ); // Rn and shifter have different signs, output has same sign as shifter or zero
             end
             `RSB: begin
                 out_exp = shifter_exp + ~Rn_exp + 1;
@@ -44,7 +46,9 @@ module alu32
             `ADD: begin
                 out_exp = Rn_exp + shifter_exp;
                 flagsout[`C_i] = out_exp[`FULLW];
-                flagsout[`V_i] = ~(Rn[`FULLW-1] ^ shifter[`FULLW-1]) & (Rn[`FULLW-1] ^ out_exp[`FULLW-1]); // operands same sign but result different sign
+                flagsout[`V_i] = ~(Rn[`FULLW-1] ^ shifter[`FULLW-1]) 
+                    & ( (Rn[`FULLW-1] ^ out_exp[`FULLW-1]) 
+                        | (out_exp[`FULLW-1:0] == 0) ); // operands same sign but result different sign or 0
             end
             `TST: begin
                 out_exp = Rn_exp & shifter_exp;

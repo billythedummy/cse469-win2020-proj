@@ -61,7 +61,7 @@ module idec32  //instruction decoder
     // write enables for mem, reg, cpsr
     assign reg_we_out = shouldexec & shouldwritereg; 
     assign mem_we_out = shouldexec & ((optype[2:1] == `OP_LDSTR) & (~is_load)); // L = 0 means store
-    assign should_set_cpsr_out = shouldexec ? {`FLAGSW{1'b0}} : should_set_cpsr;
+    assign should_set_cpsr_out = (shouldexec & ~ib_out) ? should_set_cpsr : {`FLAGSW{1'b0}};
 
     // branching
     assign bl_out = is_bl;

@@ -59,7 +59,7 @@ with open(outfile, "w") as f:
             space_ind = remove_pref.find(" ")
             instr = remove_pref[:space_ind]
             for i in range(0, len(instr), 2):
-                f.write(f'{instr[i:i+2]} ')
+                f.write(f'{instr[i:i+2]}') # no more spaces, memory is in words now
             f.write("\n")
             previous_addr = addr
 

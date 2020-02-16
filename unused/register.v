@@ -26,7 +26,4 @@ module register
             end
         end
     end
-
-    // LAB 1 CPSR
-    //if (!`IS_SIM) initial $readmemh("testcode/hexcode_tests/lab1_cpsr.mem", mem);
 endmodule
