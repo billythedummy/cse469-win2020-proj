@@ -18,7 +18,7 @@ module cpu(
 
   // These are how you communicate back to the serial port debugger.
   assign debug_port1 = instr_addr_bus[7:0];
-  assign debug_port2 = instr_bus[7:0]; 
+  assign debug_port2 = {5'b0, curr_phase}; 
   assign debug_port3 = {4'b0, rd_a_bus}; 
   assign debug_port4 = rd_out_bus[7:0]; 
   assign debug_port5 = alu_out_d_bus[7:0];
