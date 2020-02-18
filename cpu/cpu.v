@@ -25,23 +25,23 @@ module cpu(
   assign debug_port6 = reg_wd_bus[7:0];
   assign debug_port7 = {7'b0, nreset};
 
-  // BIG ENDIAN
   wire dummy0 = 1'b0;
   wire dummy1 = 1'b1;
+  wire reset = `IS_SIM ? 1'b0 : ~nreset;
 
   wire [$clog2(`PHASES)-1 : 0] curr_phase;
   phaser #(.PHASES(`PHASES)) phaser
-    (.out(curr_phase), .clk(clk), .reset(`IS_SIM ? 1'b0 : ~nreset));
+    (.out(curr_phase), .clk(clk), .reset(reset));
 
   // pc
   wire pc_we_final = reg_we & (reg_wa_bus == `PC_i) & (curr_phase == `WB_PHASE);
 
   pc32 pc (.ib(ib), .bv(bv_bus), .we(pc_we_final), .wd(reg_wd_bus),
-    .iaddrout(instr_addr_bus), .reset(`IS_SIM ? 1'b0 : ~nreset),
+    .iaddrout(instr_addr_bus), .reset(reset),
     .r_en(curr_phase == `FETCH_PHASE), .mod_en(curr_phase == `WB_PHASE),
     .clk(clk)
   );
-
+  
   // phase 0: Instr Fetch and decode
   wire [`FULLW-1 : 0] instr_bus, instr_addr_bus;
   wire [`FULLW-1 : 0] cpsr_bus, bypass_rm_d_bus, bypass_rm_q_bus;
