@@ -54,9 +54,10 @@
 `define ASR 2'b10 // code for ARITHMETIC SHIFT RIGHT
 `define ROR 2'b11 // code for ROTATE RIGHT, RRX is just checking if immed is 0
 
-// rd rn control bits
+// rd rn rm address bits
 `define RD_START_i 12
 `define RN_START_i 16
+`define RM_START_i 0
 
 // other control bits (20-24)
 `define CONTROL_START 20
