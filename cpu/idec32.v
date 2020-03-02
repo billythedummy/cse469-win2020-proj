@@ -1,7 +1,7 @@
 `include "defines.v"
 
 module idec32  //instruction decoder
-    (i_in, cpsr_in,
+    (i_in,
     alu_opcode_out,
     rn_a_out, rd_a_out, rm_a_out,
     bypass_rm_out, should_bypass_rm_out,
@@ -21,7 +21,6 @@ module idec32  //instruction decoder
     // rn unaffected
 
     input [`FULLW-1 : 0] i_in;
-    input [`FLAGSW-1 : 0] cpsr_in;
 
     // dont really care if comb logic goes through, state doesnt change
     // long as registers dont change:
@@ -31,23 +30,19 @@ module idec32  //instruction decoder
     output wire [`REGAW-1 : 0] rn_a_out, rd_a_out, rm_a_out;
     output wire reg_we_out, mem_we_out, bl_out;
     output wire ib_out, should_bypass_rm_out;
-    output wire [`FLAGSW-1 : 0] should_set_cpsr_out;
+    output wire [`FLAGS_W-1 : 0] should_set_cpsr_out;
     output wire [`FULLW-1 : 0] bv_out, bypass_rm_out;
     output wire [`WIDTH-1 : 0] shiftby_out;
     output wire [`SHIFTCODEW-1 : 0] shiftcode_out;
     output wire should_bypass_data_out;
 
     wire [`OP_TYPE_W-1 : 0] optype = i_in[`OP_TYPE_START +: `OP_TYPE_W];
-    wire shouldexec;
-    wire [`FLAGSW-1 : 0] should_set_cpsr;
+    wire [`FLAGS_W-1 : 0] should_set_cpsr;
     wire is_load = i_in[`LD_OR_STR_i];
     wire is_bl = i_in[`BL_i] & (optype == `OP_BRANCH);
     wire shouldwritereg = (optype[2:1] == `OP_DATA) 
         | ((optype[2:1] == `OP_LDSTR) & is_load)
         | is_bl;
-
-    condchecker check (.codein(i_in[`FLAGS_START +: `FLAGSW]), .cpsrin(cpsr_in),
-        .shouldexecout(shouldexec));
 
     shifterdec sdec (.optype(optype), .in(i_in[0+:`SHIFTER_OPERAND_W]),
         .rm(rm_a_out), .bypass_rm(bypass_rm_out),
@@ -55,17 +50,17 @@ module idec32  //instruction decoder
         .shiftcode(shiftcode_out), .shiftby(shiftby_out));
 
     aludec adec (.optype(i_in[`LDSTR_OR_DATA_i]),
-        .in(i_in[`CONTROL_START +: `CONTROLW]),
+        .in(i_in[`CONTROL_START +: `CONTROL_W]),
         .alu_opcode(alu_opcode_out), .should_set_cpsr(should_set_cpsr));
 
     // write enables for mem, reg, cpsr
-    assign reg_we_out = shouldexec & shouldwritereg; 
-    assign mem_we_out = shouldexec & ((optype[2:1] == `OP_LDSTR) & (~is_load)); // L = 0 means store
-    assign should_set_cpsr_out = (shouldexec & ~ib_out) ? should_set_cpsr : {`FLAGSW{1'b0}};
+    assign reg_we_out = shouldwritereg; 
+    assign mem_we_out = (optype[2:1] == `OP_LDSTR) & (~is_load); // L = 0 means store
+    assign should_set_cpsr_out = ib_out ? {`FLAGS_W{1'b0}} : should_set_cpsr; // dont set cpsr if branch
 
     // branching
     assign bl_out = is_bl;
-    assign ib_out = shouldexec & (optype == `OP_BRANCH);
+    assign ib_out = optype == `OP_BRANCH;
     assign bv_out = {{(`FULLW-`BRANCH_SHIFT-`BRANCHIMM_W){i_in[`BRANCHIMM_W-1]}},
         i_in[0+:`BRANCHIMM_W], {(`BRANCH_SHIFT){1'b0}} }; // sign extend and << 2
     

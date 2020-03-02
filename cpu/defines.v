@@ -1,7 +1,7 @@
 `ifndef _defines_v_
 `define _defines_v_
 
-`define IS_SIM 0
+`define IS_SIM 1
 
 `define WORD 4 // how many bytes in word
 `define WIDTH 8 // how many bit in byte
@@ -18,6 +18,8 @@
 `define OP_LDSTR_IMM 3'b010
 `define OP_LDSTR_REG 3'b011
 `define OP_BRANCH 3'b101
+`define LDSTR_OR_DATA_OFFSET 1
+`define LDSTR_OR_DATA_i 26
 
 // 4 bit ALU opcode (bits 21-24)
 `define ALUAW 4 // alu 'address' width
@@ -58,9 +60,10 @@
 
 // other control bits (20-24)
 `define CONTROL_START 20
-`define CONTROLW 5
-`define LDSTR_OR_DATA_i 26
+`define CONTROL_W 5
 `define LD_OR_STR_i 20
+`define LD_OR_STR_OFFSET 0
+`define BL_OFFSET 4
 
 // Branch instruction stuff
 `define BRANCHIMM_W 24
@@ -69,7 +72,7 @@
 
 // ZCNV flag indices
 `define FLAGS_START 28
-`define FLAGSW 4 // how many flags
+`define FLAGS_W 4 // how many flags
 `define V_i 0
 `define C_i 1
 `define Z_i 2

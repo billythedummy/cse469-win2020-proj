@@ -17,7 +17,7 @@ module alu32
 
     output wire [`FULLW-1:0] out;
     assign out = out_exp[`FULLW-1:0];
-    output reg [`FLAGSW-1:0] flagsout; // always outputs flags. CPSR decides to write to self or not
+    output reg [`FLAGS_W-1:0] flagsout; // always outputs flags. CPSR decides to write to self or not
 
     always @(*) begin
         case (codein)
