@@ -59,13 +59,29 @@ module cpu(
   wire [`FULLW-1 : 0] rn_from_reg, rm_from_reg, rd_from_reg;
 
   simplemux #(.WIDTH(`FULLW)) rn_wb_hazard (.in1(rn_from_reg), .in2(reg_wd),
-    .sel( reg_we_final & rn_a == reg_wa), .out(rn_RE)
+    .sel( reg_we_final & rn_a == reg_wa), .out(rn_hazard)
   );
   simplemux #(.WIDTH(`FULLW)) rm_wb_hazard (.in1(rm_from_reg), .in2(reg_wd),
-    .sel( reg_we_final & rm_a == reg_wa), .out(rm_RE)
+    .sel( reg_we_final & rm_a == reg_wa), .out(rm_hazard)
   );
   simplemux #(.WIDTH(`FULLW)) rd_wb_hazard (.in1(rd_from_reg), .in2(reg_wd),
-    .sel( reg_we_final & rd_a == reg_wa), .out(rd_RE)
+    .sel( reg_we_final & rd_a == reg_wa), .out(rd_hazard)
+  );
+  wire [`FULLW-1 : 0] rn_hazard, rm_hazard, rd_hazard;
+
+  simplemux #(.WIDTH(`FULLW)) pc_wb_hazard (.in1(instr_addr_FD), .in2(reg_wd),
+    .sel(pc_we_final), .out(pc_val)
+  );
+  wire [`FULLW-1 : 0] pc_val;
+
+  simplemux #(.WIDTH(`FULLW)) rn_is_pc (.in1(rn_hazard), .in2(pc_val),
+    .sel(rn_a == `PC_i), .out(rn_RE)
+  );
+  simplemux #(.WIDTH(`FULLW)) rm_is_pc (.in1(rm_hazard), .in2(pc_val),
+    .sel(rm_a == `PC_i), .out(rm_RE)
+  );
+  simplemux #(.WIDTH(`FULLW)) rd_is_pc (.in1(rd_hazard), .in2(pc_val),
+    .sel(rd_a == `PC_i), .out(rd_RE)
   );
 
   wire [`FULLW-1 : 0] rn_RE, rn_REEX, rm_RE, rm_REEX, rd_RE, rd_REEX;
@@ -316,7 +332,7 @@ module cpu(
   // Note: cant do this in synthesis  
   initial begin
     if (`IS_SIM) begin
-      $readmemh("../../testcode/hexcode_tests/simple_instr.mem", instr_mem.mem);
+      $readmemh("../../testcode/hexcode_tests/alu_hazard.mem", instr_mem.mem);
     end
   end
 endmodule
