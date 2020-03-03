@@ -19,8 +19,8 @@ module cpu(
   // These are how you communicate back to the serial port debugger.
   assign debug_port1 = instr_addr_FD[7:0];
   assign debug_port2 = instr_FDRE[7:0]; 
-  assign debug_port3 = rm_REEX[7:0]; // RE rd
-  assign debug_port4 = rd_REEX[7:0]; 
+  assign debug_port3 = 0; // RE rd
+  assign debug_port4 = 0; 
   assign debug_port5 = alu_out_EXME[7:0];
   assign debug_port6 = reg_wd[7:0];
   assign debug_port7 = {7'b0, nreset};
@@ -47,50 +47,30 @@ module cpu(
   preg #(.WIDTH(1)) FD_invalid_reg (.d(ib), .q(invalid_FDRE), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
 
   // phase 1: Register access
-  wire [`REGAW-1 : 0] rn_a = instr_FDRE[`RN_START_i +: `REGAW];
-  wire [`REGAW-1 : 0] rm_a = instr_FDRE[`RM_START_i +: `REGAW];
-  wire [`REGAW-1 : 0] rd_a = instr_FDRE[`RD_START_i +: `REGAW];
+  wire [`REGAW-1 : 0] rn_a_RE = instr_FDRE[`RN_START_i +: `REGAW];
+  wire [`REGAW-1 : 0] rm_a_RE = instr_FDRE[`RM_START_i +: `REGAW];
+  wire [`REGAW-1 : 0] rd_a_RE = instr_FDRE[`RD_START_i +: `REGAW];
 
-  reg32 registers(.rn_a(rn_a), .rm_a(rm_a), .rd_a(rd_a),
+  reg32 registers(.rn_a(rn_a_RE), .rm_a(rm_a_RE), .rd_a(rd_a_RE),
     .we(reg_we_final), .wd(reg_wd), .wa(reg_wa),
-    .rn_out(rn_from_reg), .rm_out(rm_from_reg), .rd_out(rd_from_reg),
+    .rn_out(rn_from_reg_REEX),
+    .rm_out(rm_from_reg_REEX),
+    .rd_out(rd_from_reg_REEX),
     .clk(clk));
 
-  wire [`FULLW-1 : 0] rn_from_reg, rm_from_reg, rd_from_reg;
+  wire [`FULLW-1 : 0] rn_from_reg_REEX, rm_from_reg_REEX, rd_from_reg_REEX;
 
-  simplemux #(.WIDTH(`FULLW)) rn_wb_hazard (.in1(rn_from_reg), .in2(reg_wd),
-    .sel( reg_we_final & rn_a == reg_wa), .out(rn_hazard)
-  );
-  simplemux #(.WIDTH(`FULLW)) rm_wb_hazard (.in1(rm_from_reg), .in2(reg_wd),
-    .sel( reg_we_final & rm_a == reg_wa), .out(rm_hazard)
-  );
-  simplemux #(.WIDTH(`FULLW)) rd_wb_hazard (.in1(rd_from_reg), .in2(reg_wd),
-    .sel( reg_we_final & rd_a == reg_wa), .out(rd_hazard)
-  );
-  wire [`FULLW-1 : 0] rn_hazard, rm_hazard, rd_hazard;
+  wire [`FULLW-1 : 0] prev_reg_wd_REEX;
+  wire [`REGAW-1 : 0] prev_reg_wa_REEX;
+  wire prev_reg_we_REEX, prev_pc_we_REEX;
 
-  simplemux #(.WIDTH(`FULLW)) pc_wb_hazard (.in1(instr_addr_FD), .in2(reg_wd),
-    .sel(pc_we_final), .out(pc_val)
-  );
-  wire [`FULLW-1 : 0] pc_val;
-
-  simplemux #(.WIDTH(`FULLW)) rn_is_pc (.in1(rn_hazard), .in2(pc_val),
-    .sel(rn_a == `PC_i), .out(rn_RE)
-  );
-  simplemux #(.WIDTH(`FULLW)) rm_is_pc (.in1(rm_hazard), .in2(pc_val),
-    .sel(rm_a == `PC_i), .out(rm_RE)
-  );
-  simplemux #(.WIDTH(`FULLW)) rd_is_pc (.in1(rd_hazard), .in2(pc_val),
-    .sel(rd_a == `PC_i), .out(rd_RE)
-  );
-
-  wire [`FULLW-1 : 0] rn_RE, rn_REEX, rm_RE, rm_REEX, rd_RE, rd_REEX;
   wire [`FULLW-1 : 0] instr_REEX, instr_addr_REEX;
   wire invalid_REEX;
 
-  preg #(.WIDTH(`FULLW)) rn_REEX_reg (.d(rn_RE), .q(rn_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
-  preg #(.WIDTH(`FULLW)) rm_REEX_reg (.d(rm_RE), .q(rm_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
-  preg #(.WIDTH(`FULLW)) rd_REEX_reg (.d(rd_RE), .q(rd_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
+  preg #(.WIDTH(`FULLW)) prev_reg_wd (.d(reg_wd), .q(prev_reg_wd_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
+  preg #(.WIDTH(`REGAW)) prev_reg_wa (.d(reg_wa), .q(prev_reg_wa_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
+  preg #(.WIDTH(1)) prev_reg_we (.d(reg_we_final), .q(prev_reg_we_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
+  preg #(.WIDTH(1)) prev_pc_we (.d(pc_we_final), .q(prev_pc_we_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
   preg #(.WIDTH(`FULLW)) instr_REEX_reg (.d(instr_FDRE), .q(instr_REEX), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
   preg #(.WIDTH(`FULLW)) instr_addr_REEX_reg (.d(instr_addr_FDRE), .q(instr_addr_REEX), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
   preg #(.WIDTH(1)) RE_invalid_reg (.d(ib | invalid_FDRE), .q(invalid_REEX), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
@@ -114,11 +94,33 @@ module cpu(
   wire [`SHIFTCODEW-1:0] shiftcode;
   wire [`WIDTH-1:0] shiftby;
 
-  // hazard from ME stage should take precedence
+  wire [`REGAW-1 : 0] rn_a_EX = instr_REEX[`RN_START_i +: `REGAW];
+  wire [`REGAW-1 : 0] rm_a_EX = instr_REEX[`RM_START_i +: `REGAW];
+  wire [`REGAW-1 : 0] rd_a_EX = instr_REEX[`RD_START_i +: `REGAW];
+
+  // hazard from ME stage should take precedence i.e. muxed last
+
+  simplemux #(.WIDTH(`FULLW)) pc_wb_hazard (.in1(instr_addr_FD), .in2(prev_reg_wd_REEX),
+    .sel(prev_pc_we_REEX), .out(curr_pc_val)
+  );
+  wire [`FULLW-1 : 0] curr_pc_val;
 
   // rm hazard processing
+  // rm wb hazard
+  simplemux #(.WIDTH(`FULLW)) rm_wb_hazard_mux (.in1(rm_from_reg_REEX), .in2(prev_reg_wd_REEX),
+    .sel( reg_we_final & rm_a_EX == prev_reg_wa_REEX), .out(rm_wb_hazard_nopc)
+  );
+
+  wire [`FULLW-1 : 0] rm_wb_hazard_nopc;
+
+  simplemux #(.WIDTH(`FULLW)) rm_is_pc (.in1(rm_wb_hazard_nopc), .in2(curr_pc_val),
+    .sel(rm_a_EX == `PC_i), .out(rm_wb_hazard)
+  );
+
+  wire [`FULLW-1 : 0] rm_wb_hazard;
+
   // rm load hazard  
-  simplemux #(.WIDTH(`FULLW)) rm_mem_hazard_mux(.in1(rm_REEX), .in2(mem_out_MEWB),
+  simplemux #(.WIDTH(`FULLW)) rm_mem_hazard_mux(.in1(rm_wb_hazard), .in2(mem_out_MEWB),
     .sel(rm_has_mem_hazard_MEWB),
     .out(rm_mem_hazard)
   );
@@ -166,8 +168,21 @@ module cpu(
   wire [`FLAGS_W-1 : 0] should_set_cpsr;
 
   // rn hazard processing
+  // rn wb hazard
+  simplemux #(.WIDTH(`FULLW)) rn_wb_hazard_mux (.in1(rn_from_reg_REEX), .in2(prev_reg_wd_REEX),
+    .sel( reg_we_final & rn_a_EX == prev_reg_wa_REEX), .out(rn_wb_hazard_nopc)
+  );
+
+  wire [`FULLW-1 : 0] rn_wb_hazard_nopc;
+
+  simplemux #(.WIDTH(`FULLW)) rn_is_pc (.in1(rn_wb_hazard_nopc), .in2(curr_pc_val),
+    .sel(rn_a_EX == `PC_i), .out(rn_wb_hazard)
+  );
+
+  wire [`FULLW-1 : 0] rn_wb_hazard;
+
   // rn load hazard
-  simplemux #(.WIDTH(`FULLW)) rn_mem_hazard_mux(.in1(rn_REEX), .in2(mem_out_MEWB),
+  simplemux #(.WIDTH(`FULLW)) rn_mem_hazard_mux(.in1(rn_wb_hazard), .in2(mem_out_MEWB),
     .sel(rn_has_mem_hazard_MEWB),
     .out(rn_mem_hazard)
   );
@@ -192,8 +207,21 @@ module cpu(
   wire [`FULLW-1 : 0] rn_EX;
 
   // rd hazard processing
+  // rd wb hazard
+  simplemux #(.WIDTH(`FULLW)) rd_wb_hazard_mux (.in1(rd_from_reg_REEX), .in2(prev_reg_wd_REEX),
+    .sel( reg_we_final & rd_a_EX == prev_reg_wa_REEX), .out(rd_wb_hazard_nopc)
+  );
+
+  wire [`FULLW-1 : 0] rd_wb_hazard_nopc;
+
+  simplemux #(.WIDTH(`FULLW)) rd_is_pc (.in1(rd_wb_hazard_nopc), .in2(curr_pc_val),
+    .sel(rd_a_EX == `PC_i), .out(rd_wb_hazard)
+  );
+
+  wire [`FULLW-1 : 0] rd_wb_hazard;
+
   // rd load hazard
-  simplemux #(.WIDTH(`FULLW)) rd_mem_hazard_mux(.in1(rd_REEX), .in2(mem_out_MEWB),
+  simplemux #(.WIDTH(`FULLW)) rd_mem_hazard_mux(.in1(rd_wb_hazard), .in2(mem_out_MEWB),
     .sel(rd_has_mem_hazard_MEWB),
     .out(rd_mem_hazard)
   );
@@ -255,15 +283,15 @@ module cpu(
   preg #(.WIDTH(1)) EX_invalid_reg (.d(set_EX_invalid | invalid_REEX), .q(invalid_EXME), .stall(stall_bits[`EXE_PHASE]), .clk(clk));
 
   // phase 3: mem access
-  wire [`FULLW-1 : 0] mem_out, mem_out_MEWB;
   wire [`OP_TYPE_W-1 : 0] optype_ME = instr_EXME[`OP_TYPE_START +: `OP_TYPE_W];
 
   ram data_mem(.wd(rd_EXME), .wa(alu_out_EXME),
     .we(
       optype_ME[2:1] == `OP_LDSTR & ~instr_EXME[`LD_OR_STR_i] & ~invalid_EXME
     ),
-    .ra(alu_out_EXME), .out(mem_out),
+    .ra(alu_out_EXME), .out(mem_out_MEWB),
     .clk(clk));
+  wire [`FULLW-1 : 0] mem_out_MEWB;
   
   wire [`FULLW-1 : 0] alu_out_MEWB;
 
@@ -295,7 +323,6 @@ module cpu(
   wire [`FULLW-1 : 0] instr_MEWB, instr_addr_MEWB;
   wire invalid_MEWB;
 
-  preg #(.WIDTH(`FULLW)) mem_MEWB_reg (.d(mem_out), .q(mem_out_MEWB), .stall(stall_bits[`MEM_PHASE]), .clk(clk));
   preg #(.WIDTH(`FULLW)) alu_out_MEWB_reg (.d(alu_out_EXME), .q(alu_out_MEWB), .stall(stall_bits[`MEM_PHASE]), .clk(clk));
   preg #(.WIDTH(1)) bl_MEWB_reg (.d(bl_EXME), .q(bl_MEWB), .stall(stall_bits[`MEM_PHASE]), .clk(clk));
   preg #(.WIDTH(1)) rm_has_mem_hazard_MEWB_reg (.d(rm_has_mem_hazard_ME), .q(rm_has_mem_hazard_MEWB), .stall(stall_bits[`MEM_PHASE]), .clk(clk));
