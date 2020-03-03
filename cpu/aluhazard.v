@@ -5,7 +5,6 @@ module aluhazard
     curr_reg, prev_reg, 
     should_bypass);
     
-    // CPSR: 0 - Zero, 1 - Carry, 2 - Negative, 3 - oVerflow
     input [`ALUAW-1:0] prev_alu_opcode;
     input [`REGAW-1:0] curr_reg, prev_reg;
 

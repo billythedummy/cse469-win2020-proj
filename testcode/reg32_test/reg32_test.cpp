@@ -76,6 +76,7 @@ int main(int argc, char** argv)
     uut->rm_a = wa;
     uut->we = 0;
     uut->wa = 0;
+    uut->rd_a = 0;
     uut->wd = 0;
     fullClock(uut, tfp, &main_time);
     assert(uut->rn_out == write_data);
@@ -85,12 +86,14 @@ int main(int argc, char** argv)
     write_data = 0xDEADBEEF;
     uut->we = 1;
     uut->wa = wa;
+    uut->rd_a = wa;
     uut->wd = write_data;
     fullClock(uut, tfp, &main_time);
 
     // Check Rd out
     uut->we = 0;
     uut->wa = wa;
+    uut->rd_a = wa;
     uut->wd = 0;
     fullClock(uut, tfp, &main_time);
     assert(uut->rd_out == write_data);
@@ -98,6 +101,7 @@ int main(int argc, char** argv)
     // DEADBEEF should be at rm_out, CAFEF00D should be at rn_out
     uut->we = 0;
     uut->wa = 0;
+    uut->rd_a = 0;
     uut->wd = 0;
     fullClock(uut, tfp, &main_time);
     assert(uut->rm_out == write_data);
@@ -105,6 +109,7 @@ int main(int argc, char** argv)
     // Check what Rd outputs when Rd is being written to at the same time
     uut->we = 1;
     uut->wa = wa;
+    uut->rd_a = wa;
     uut->wd = 0xFACEBADE;
     fullClock(uut, tfp, &main_time);
     assert(uut->rd_out == write_data); // should be old data
