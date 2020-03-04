@@ -31,7 +31,10 @@ module cpu(
   wire [`PHASES-1 : 0] stall_bits;
 
   // phase 0: Instr Fetch and decode
-  pc32 pc (.ib(ib), .bv(bv), .we(pc_we_final), .wd(reg_wd),
+  preg #(.WIDTH(1)) pre_FD_invalid_reg (.d(pc_modified), .q(invalid_pre_FD), .stall(stall_bits[`EXE_PHASE]), .clk(clk));
+  wire invalid_pre_FD;
+
+  pc32 pc (.ib(ib), .bv(bv), .we(pc_we_final), .wd(alu_out_EX),
     .iaddrout(curr_instr_addr), .reset(reset), .mod_en(~stall_bits[`FETCH_PHASE]),
     .clk(clk)
   );
@@ -51,8 +54,10 @@ module cpu(
 
   wire invalid_FDRE;
 
+  wire pc_modified = ib | pc_we_final;
+
   preg #(.WIDTH(`FULLW)) instr_addr_FDRE_reg (.d(instr_addr_FD), .q(instr_addr_FDRE), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
-  preg #(.WIDTH(1)) FD_invalid_reg (.d(ib), .q(invalid_FDRE), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
+  preg #(.WIDTH(1)) FD_invalid_reg (.d(invalid_pre_FD | pc_modified), .q(invalid_FDRE), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
 
   // phase 1: Register access
   wire [`REGAW-1 : 0] rn_a_RE = instr_FDRE[`RN_START_i +: `REGAW];
@@ -81,7 +86,7 @@ module cpu(
   preg #(.WIDTH(1)) prev_pc_we (.d(pc_we_final), .q(prev_pc_we_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
   preg #(.WIDTH(`FULLW)) instr_REEX_reg (.d(instr_FDRE), .q(instr_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
   preg #(.WIDTH(`FULLW)) instr_addr_REEX_reg (.d(instr_addr_FDRE), .q(instr_addr_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
-  preg #(.WIDTH(1)) RE_invalid_reg (.d(ib | invalid_FDRE), .q(invalid_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
+  preg #(.WIDTH(1)) RE_invalid_reg (.d(pc_modified | invalid_FDRE), .q(invalid_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
 
   // phase 2: Exec
   condchecker cchecker (.codein(instr_REEX[`FLAGS_START +: `FLAGS_W]),
@@ -267,13 +272,14 @@ module cpu(
   
   wire [`FULLW-1 : 0] cpsr_out;
 
-  branchdec bdec (.optype(instr_REEX[`OP_TYPE_START +: `OP_TYPE_W]),
-    .branch_imm(instr_REEX[0 +: `BRANCHIMM_W]),
-    .ib_out(ib_nocond), .bv_out(bv));
+  branchdec bdec (.instr(instr_REEX),
+    .ib_out(ib_nocond), .bv_out(bv), .pc_we_out(pc_we_nocond));
 
   wire ib_nocond;
   wire ib = ib_nocond & is_ex_valid; // goes back to PC
   wire [`FULLW-1 : 0] bv;
+  wire pc_we_nocond;
+  wire pc_we_final = pc_we_nocond & is_ex_valid;
 
   wire [`FULLW-1 : 0] rd_EXME;
 
@@ -361,14 +367,12 @@ module cpu(
     .reg_wd_out(reg_wd)
   );
 
-  wire pc_we_final = reg_we & (reg_wa == `PC_i) & ~invalid_MEWB;
-  wire reg_we_final = reg_we & ~invalid_MEWB;
+  wire reg_we_final = reg_we & (reg_wa != `PC_i) & ~invalid_MEWB;
 
-  
   // Note: cant do this in synthesis  
   initial begin
     if (`IS_SIM) begin
-      $readmemh("../../testcode/hexcode_tests/mem_hazard.mem", instr_mem.mem);
+      $readmemh("../../testcode/hexcode_tests/lab2_instr.mem", instr_mem.mem);
     end
   end
 endmodule

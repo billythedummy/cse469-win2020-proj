@@ -23,7 +23,7 @@ module pc32
                 ctr <= wd;
             end
             else begin
-                if (ib) ctr <= ctr + bv;
+                if (ib) ctr <= iaddrout + bv;
                 else ctr <= ctr + 4;
             end
             iaddrout <= ctr;
