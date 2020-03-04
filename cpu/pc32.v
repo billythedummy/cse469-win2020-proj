@@ -17,10 +17,8 @@ module pc32
     reg signed [`FULLW-1:0] ctr;
 
     always @(posedge clk) begin
-        if (reset) begin
-            ctr <= 0;
-        end
-        if (mod_en) begin
+        if (reset) ctr <= 0;
+        else if (mod_en) begin
             if (we) begin
                 ctr <= wd;
             end
@@ -28,8 +26,9 @@ module pc32
                 if (ib) ctr <= ctr + bv;
                 else ctr <= ctr + 4;
             end
+            iaddrout <= ctr;
         end
-        iaddrout <= ctr;
+        else iaddrout <= iaddrout;
     end
 
 endmodule

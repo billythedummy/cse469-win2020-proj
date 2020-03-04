@@ -7,3 +7,4 @@
     BIC r4, r4, r4
     SUB r12, r2, r1 
     ADD r1, r1, r1
+    ADD r1, pc

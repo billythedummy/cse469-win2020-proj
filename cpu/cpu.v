@@ -32,14 +32,22 @@ module cpu(
 
   // phase 0: Instr Fetch and decode
   pc32 pc (.ib(ib), .bv(bv), .we(pc_we_final), .wd(reg_wd),
-    .iaddrout(instr_addr_FD), .reset(reset), .mod_en(~stall_bits[`FETCH_PHASE]),
+    .iaddrout(curr_instr_addr), .reset(reset), .mod_en(~stall_bits[`FETCH_PHASE]),
     .clk(clk)
   );
+  wire [`FULLW-1 : 0] curr_instr_addr;
   
+  dff #(.WIDTH(`FULLW)) instr_addr_dff (.d(curr_instr_addr), .q(prev_instr_addr_cache), .clk(clk));
+  wire [`FULLW-1 : 0] prev_instr_addr_cache;
+  simplemux #(.WIDTH(`FULLW)) instr_stall_mux (.in1(curr_instr_addr), .in2(prev_instr_addr_cache),
+    .sel(stall_bits[`FETCH_PHASE]), .out(instr_addr_FD)
+  );
+
   wire [`FULLW-1 : 0] instr_addr_FD, instr_FDRE, instr_addr_FDRE;
 
   ram #(.IS_INSTR(1)) instr_mem(.wa({`FULLW{dummy0}}), .we(dummy0), .wd({`FULLW{dummy0}}),
     .ra(instr_addr_FD), .out(instr_FDRE), .clk(clk));
+  //wire [`FULLW-1 : 0] curr_instr;
 
   wire invalid_FDRE;
 
@@ -71,9 +79,9 @@ module cpu(
   preg #(.WIDTH(`REGAW)) prev_reg_wa (.d(reg_wa), .q(prev_reg_wa_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
   preg #(.WIDTH(1)) prev_reg_we (.d(reg_we_final), .q(prev_reg_we_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
   preg #(.WIDTH(1)) prev_pc_we (.d(pc_we_final), .q(prev_pc_we_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
-  preg #(.WIDTH(`FULLW)) instr_REEX_reg (.d(instr_FDRE), .q(instr_REEX), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
-  preg #(.WIDTH(`FULLW)) instr_addr_REEX_reg (.d(instr_addr_FDRE), .q(instr_addr_REEX), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
-  preg #(.WIDTH(1)) RE_invalid_reg (.d(ib | invalid_FDRE), .q(invalid_REEX), .stall(stall_bits[`FETCH_PHASE]), .clk(clk));
+  preg #(.WIDTH(`FULLW)) instr_REEX_reg (.d(instr_FDRE), .q(instr_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
+  preg #(.WIDTH(`FULLW)) instr_addr_REEX_reg (.d(instr_addr_FDRE), .q(instr_addr_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
+  preg #(.WIDTH(1)) RE_invalid_reg (.d(ib | invalid_FDRE), .q(invalid_REEX), .stall(stall_bits[`REG_PHASE]), .clk(clk));
 
   // phase 2: Exec
   condchecker cchecker (.codein(instr_REEX[`FLAGS_START +: `FLAGS_W]),
@@ -314,9 +322,10 @@ module cpu(
     & instr_EXME[`RD_START_i +: `REGAW] == instr_REEX[`RD_START_i +: `REGAW];
   wire rd_has_mem_hazard_MEWB;
   
-  assign stall_bits[`FETCH_PHASE] = rm_has_mem_hazard_ME | rn_has_mem_hazard_ME | rd_has_mem_hazard_ME;
-  assign stall_bits[`REG_PHASE] = rm_has_mem_hazard_ME | rn_has_mem_hazard_ME | rd_has_mem_hazard_ME;
-  assign stall_bits[`EXE_PHASE] = rm_has_mem_hazard_ME | rn_has_mem_hazard_ME | rd_has_mem_hazard_ME;
+  wire has_mem_hazard = rm_has_mem_hazard_ME | rn_has_mem_hazard_ME | rd_has_mem_hazard_ME;
+  assign stall_bits[`FETCH_PHASE] = has_mem_hazard;
+  assign stall_bits[`REG_PHASE] = has_mem_hazard;
+  assign stall_bits[`EXE_PHASE] = has_mem_hazard;
 
   wire bl_MEWB;
 
@@ -359,7 +368,7 @@ module cpu(
   // Note: cant do this in synthesis  
   initial begin
     if (`IS_SIM) begin
-      $readmemh("../../testcode/hexcode_tests/alu_hazard.mem", instr_mem.mem);
+      $readmemh("../../testcode/hexcode_tests/mem_hazard.mem", instr_mem.mem);
     end
   end
 endmodule
