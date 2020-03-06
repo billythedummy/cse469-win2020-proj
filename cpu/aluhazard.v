@@ -8,7 +8,7 @@ module aluhazard
     input [`ALUAW-1:0] prev_alu_opcode;
     input [`REGAW-1:0] curr_reg, prev_reg;
 
-    output should_bypass;
+    output reg should_bypass;
 
     always @(*) begin
         case (prev_alu_opcode)

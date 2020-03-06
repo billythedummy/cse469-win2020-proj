@@ -18,10 +18,10 @@ module cpu(
 
   // These are how you communicate back to the serial port debugger.
   assign debug_port1 = instr_addr_FD[7:0];
-  assign debug_port2 = instr_FDRE[7:0]; 
-  assign debug_port3 = 0; // RE rd
-  assign debug_port4 = 0; 
-  assign debug_port5 = alu_out_EXME[7:0];
+  assign debug_port2 = instr_addr_FDRE[7:0]; 
+  assign debug_port3 = instr_addr_REEX[7:0]; // RE rd
+  assign debug_port4 = bv[7:0]; 
+  assign debug_port5 = ib;
   assign debug_port6 = reg_wd[7:0];
   assign debug_port7 = {7'b0, nreset};
 
@@ -268,7 +268,7 @@ module cpu(
   cpsr32 cpsr (.should_set_cpsr(
       should_set_cpsr & {`FLAGS_W{is_ex_valid}}
     ),
-    .cpsrwd(alu_flags_write), .out(cpsr_out), .clk(clk));
+    .cpsrwd(alu_flags_write), .out(cpsr_out), .clk(clk), .reset(reset));
   
   wire [`FULLW-1 : 0] cpsr_out;
 
@@ -354,7 +354,7 @@ module cpu(
   wire [`OP_TYPE_W-1 : 0] optype_WB = instr_MEWB[`OP_TYPE_START +: `OP_TYPE_W];
 
   simplemux #(.WIDTH(`FULLW)) data_bypass_mux (.in1(mem_out_MEWB), .in2(alu_out_MEWB),
-    .sel(~(optype_WB[2:1] == `OP_LDSTR)),
+    .sel(~(optype_WB[2:1] == `OP_LDSTR)), // dont need to check if its load or store here since store doesnt wb anyway
     .out(mem_or_alu));
     
   wbdec writebackdec (
