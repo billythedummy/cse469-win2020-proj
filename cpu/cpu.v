@@ -19,11 +19,11 @@ module cpu(
   // These are how you communicate back to the serial port debugger.
   assign debug_port1 = instr_addr_FD[7:0];
   assign debug_port2 = instr_addr_FDRE[7:0]; 
-  assign debug_port3 = instr_addr_REEX[7:0]; // RE rd
-  assign debug_port4 = bv[7:0]; 
-  assign debug_port5 = ib;
-  assign debug_port6 = reg_wd[7:0];
-  assign debug_port7 = {7'b0, nreset};
+  assign debug_port3 = instr_addr_REEX[7:0];
+  assign debug_port4 = rn_EX[31:24]; //instr_addr_EXME[7:0]; 
+  assign debug_port5 = shifter_out[31:24]; //{7'b0, is_ex_valid};
+  assign debug_port6 = {4'b0, alu_flags_write}; //{7'b0, ib};
+  assign debug_port7 = {7'b0, is_ex_valid}; //cpsr_out[31:24];
 
   wire dummy0 = 1'b0;
   wire dummy1 = 1'b1;
@@ -121,7 +121,7 @@ module cpu(
   // rm hazard processing
   // rm wb hazard
   simplemux #(.WIDTH(`FULLW)) rm_wb_hazard_mux (.in1(rm_from_reg_REEX), .in2(prev_reg_wd_REEX),
-    .sel( reg_we_final & rm_a_EX == prev_reg_wa_REEX), .out(rm_wb_hazard_nopc)
+    .sel( prev_reg_we_REEX & rm_a_EX == prev_reg_wa_REEX), .out(rm_wb_hazard_nopc)
   );
 
   wire [`FULLW-1 : 0] rm_wb_hazard_nopc;
@@ -151,7 +151,7 @@ module cpu(
   wire rm_has_alu_hazard_ME;
 
   simplemux #(.WIDTH(`FULLW)) rm_alu_hazard_mux_ME(.in1(rm_mem_hazard), .in2(alu_out_EXME),
-    .sel(rm_has_alu_hazard_ME & instr_EXME[`OP_TYPE_START+1 +: `OP_TYPE_W-1] == `OP_DATA),
+    .sel(rm_has_alu_hazard_ME & instr_EXME[`OP_TYPE_START+1 +: `OP_TYPE_W-1] == `OP_DATA & ~invalid_EXME),
     .out(rm_EX)
   );
   
@@ -183,7 +183,7 @@ module cpu(
   // rn hazard processing
   // rn wb hazard
   simplemux #(.WIDTH(`FULLW)) rn_wb_hazard_mux (.in1(rn_from_reg_REEX), .in2(prev_reg_wd_REEX),
-    .sel( reg_we_final & rn_a_EX == prev_reg_wa_REEX), .out(rn_wb_hazard_nopc)
+    .sel( prev_reg_we_REEX & rn_a_EX == prev_reg_wa_REEX), .out(rn_wb_hazard_nopc)
   );
 
   wire [`FULLW-1 : 0] rn_wb_hazard_nopc;
@@ -213,7 +213,7 @@ module cpu(
   wire rn_has_alu_hazard_ME;
 
   simplemux #(.WIDTH(`FULLW)) rn_alu_hazard_mux_ME(.in1(rn_mem_hazard), .in2(alu_out_EXME),
-    .sel(rn_has_alu_hazard_ME & instr_EXME[`OP_TYPE_START+1 +: `OP_TYPE_W-1] == `OP_DATA),
+    .sel(rn_has_alu_hazard_ME & instr_EXME[`OP_TYPE_START+1 +: `OP_TYPE_W-1] == `OP_DATA & ~invalid_EXME),
     .out(rn_EX)
   );
 
@@ -222,7 +222,7 @@ module cpu(
   // rd hazard processing
   // rd wb hazard
   simplemux #(.WIDTH(`FULLW)) rd_wb_hazard_mux (.in1(rd_from_reg_REEX), .in2(prev_reg_wd_REEX),
-    .sel( reg_we_final & rd_a_EX == prev_reg_wa_REEX), .out(rd_wb_hazard_nopc)
+    .sel( prev_reg_we_REEX & rd_a_EX == prev_reg_wa_REEX), .out(rd_wb_hazard_nopc)
   );
 
   wire [`FULLW-1 : 0] rd_wb_hazard_nopc;
@@ -252,7 +252,7 @@ module cpu(
   wire rd_has_alu_hazard_ME;
 
   simplemux #(.WIDTH(`FULLW)) rd_alu_hazard_mux_ME(.in1(rd_mem_hazard), .in2(alu_out_EXME),
-    .sel(rd_has_alu_hazard_ME & instr_EXME[`OP_TYPE_START+1 +: `OP_TYPE_W-1] == `OP_DATA),
+    .sel(rd_has_alu_hazard_ME & instr_EXME[`OP_TYPE_START+1 +: `OP_TYPE_W-1] == `OP_DATA & ~invalid_EXME),
     .out(rd_EX)
   );
 
@@ -299,7 +299,7 @@ module cpu(
   // phase 3: mem access
   wire [`OP_TYPE_W-1 : 0] optype_ME = instr_EXME[`OP_TYPE_START +: `OP_TYPE_W];
 
-  ram data_mem(.wd(rd_EXME), .wa(alu_out_EXME),
+  ram #(.IS_INSTR(0)) data_mem(.wd(rd_EXME), .wa(alu_out_EXME),
     .we(
       optype_ME[2:1] == `OP_LDSTR & ~instr_EXME[`LD_OR_STR_i] & ~invalid_EXME
     ),

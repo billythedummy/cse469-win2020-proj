@@ -31,9 +31,10 @@ module ram
         end
     end
 
-    // LAB 1 INSTR
+    // LOAD INITIAL RAM DATA
     if (!`IS_SIM) begin
         if (IS_INSTR) initial $readmemh("testcode/hexcode_tests/lab2_instr.mem", mem);
+        else initial $readmemh("testcode/hexcode_tests/blank.mem", mem);
     end
 
 endmodule
